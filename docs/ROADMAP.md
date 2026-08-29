@@ -38,7 +38,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 5     | Profil utilisateur et préférences                   | ✅ Terminée |
 | 6     | Domaine et API des offres                           | ✅ Terminée |
 | 7     | Collecteur fictif                                   | ✅ Terminée |
-| 8     | Pipeline collecte → normalisation → stockage        | ⬜ À faire  |
+| 8     | Pipeline collecte → normalisation → stockage        | ✅ Terminée |
 | 9     | Déduplication                                       | ⬜ À faire  |
 | 10    | Premier connecteur réel                             | ⬜ À faire  |
 | 11    | Matching déterministe V1                            | ⬜ À faire  |
@@ -631,7 +631,7 @@ Les fixtures doivent notamment permettre de représenter :
 
 ## Étape 8 — Pipeline collecte → normalisation → stockage
 
-**État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
@@ -1466,10 +1466,10 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 Étape 4   ✅ Fondation FastAPI
 Étape 5   ✅ Profil utilisateur
 ────────────────────────────────────────
-Étape 6   ⬜ Domaine/API offres        ← PROCHAINE ÉTAPE
+Étape 6   ⬜ Domaine/API offres
 Étape 7   ⬜ Collecteur fictif
-Étape 8   ⬜ Pipeline
-Étape 9   ⬜ Déduplication
+Étape 8   ✅ Pipeline
+Étape 9   ⬜ Déduplication        ← PROCHAINE ÉTAPE
 Étape 10  ⬜ Première source réelle
 Étape 11  ⬜ Matching V1
 Étape 12  ⬜ Frontend offres
