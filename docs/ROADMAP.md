@@ -1,6 +1,6 @@
 # Roadmap du projet
 
-Statut actuel : Étape 0 — Architecture en cours et validée.
+Statut actuel : Étape 1 — Bootstrap du repository terminé.
 
 La roadmap suit la logique de développement incrémental définie dans AGENTS.md et la spécification produit. Le projet ne doit pas avancer vers l’étape suivante sans validation de l’architecture de l’étape courante.
 
@@ -24,38 +24,51 @@ Livrables attendus :
 
 Ce document et les ADR associés définissent l’état de référence pour l’étape 0.
 
-### Non inclus dans cette étape
+### État
 
-- aucun code backend ou frontend fonctionnel ;
-- aucun schéma de base de données migré ;
-- aucune implémentation de collecteur réel ;
-- aucun moteur de matching exécutable ;
-- aucune interface web exploitable.
+Ceci est désormais validé et documenté dans [docs/ARCHITECTURE.md](ARCHITECTURE.md) et les ADRs associés.
 
 ---
 
-## Étape 1 — Skeleton backend et configuration
+## Étape 1 — Bootstrap du repository
 
-À venir après validation de l’étape 0.
+Objectif : mettre en place le squelette technique initial du projet.
+
+### Terminé dans ce lot
+
+- backend Python avec FastAPI ;
+- frontend React + TypeScript + Vite ;
+- configuration uv et lockfile ;
+- Ruff, ty et pytest installés et validés ;
+- configuration TypeScript stricte ;
+- fichier de base Git ignore ;
+- exemple de variables d’environnement ;
+- documentation de démarrage minimale.
+
+### Non inclus dans cette étape
+
+- aucun modèle métier ;
+- aucune base PostgreSQL ;
+- aucun collecteur ;
+- aucun moteur de matching ;
+- aucune fonctionnalité des étapes suivantes.
+
+---
+
+## Étape 2 — Modèle métier et persistance
 
 ### Objectif
 
-Poser la base technique du backend :
+Implémenter les premiers modèles de données, repositories et migrations initiales.
 
-- project Python avec uv ;
-- configuration FastAPI ;
-- configuration PostgreSQL ;
-- base de modèles SQLAlchemy ;
-- migrations Alembic ;
-- erreurs et logging centralisés ;
-- première API de santé / jobs / profile ;
-- qualité de code avec Ruff et ty.
+### Sous-étapes
 
-### À ne pas faire avant la fin de l’étape 0
-
-- collecte réelle de sources ;
-- logique de matching complète ;
-- composants frontend avancés.
+- JobSource et RawJobSnapshot ;
+- JobOffer et JobOccurrence ;
+- UserProfile et UserPreference ;
+- Interaction et Application ;
+- MatchResult ;
+- premières API de lecture/écriture.
 
 ---
 
