@@ -1,6 +1,6 @@
 # Roadmap du projet
 
-Statut actuel : Étape 2 — Infrastructure locale configurée, validation Docker bloquée par l’absence de Docker dans cet environnement.
+Statut actuel : Étape 3 — Persistance backend initiale mise en place : modèles SQLAlchemy, base de données centralisée, migration initiale et validation des tests Python. La validation Docker/PostgreSQL complète reste dépendante d’un environnement avec Docker installé.
 
 La roadmap suit la logique de développement incrémental définie dans AGENTS.md et la spécification produit. Le projet ne doit pas avancer vers l’étape suivante sans validation de l’architecture de l’étape courante.
 
@@ -95,7 +95,7 @@ Implémenter les premiers modèles de données, repositories et migrations initi
 
 ### État
 
-Non commencé.
+Première couche de persistance mise en place dans le backend : modèles SQLAlchemy responsables du stockage des sources, snapshots bruts, offres canonisées et occurrences, avec connexion Alembic vers la metadata partagée. La migration initiale est créée dans le dépôt et les tests de modèle passent localement. La validation complète avec PostgreSQL réel reste dépendante de Docker ou d’un service Postgres disponible.
 
 ---
 
