@@ -39,7 +39,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 6     | Domaine et API des offres                           | ✅ Terminée |
 | 7     | Collecteur fictif                                   | ✅ Terminée |
 | 8     | Pipeline collecte → normalisation → stockage        | ✅ Terminée |
-| 9     | Déduplication                                       | ⬜ À faire  |
+| 9     | Déduplication                                       | ✅ Terminée |
 | 10    | Premier connecteur réel                             | ⬜ À faire  |
 | 11    | Matching déterministe V1                            | ⬜ À faire  |
 | 12    | Frontend — liste et détail des offres               | ⬜ À faire  |
@@ -702,7 +702,7 @@ Prévoir notamment :
 
 ## Étape 9 — Déduplication
 
-**État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
@@ -1469,8 +1469,8 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 Étape 6   ⬜ Domaine/API offres
 Étape 7   ⬜ Collecteur fictif
 Étape 8   ✅ Pipeline
-Étape 9   ⬜ Déduplication        ← PROCHAINE ÉTAPE
-Étape 10  ⬜ Première source réelle
+Étape 9   ✅ Déduplication
+Étape 10  ⬜ Première source réelle     ← PROCHAINE ÉTAPE
 Étape 11  ⬜ Matching V1
 Étape 12  ⬜ Frontend offres
 Étape 13  ⬜ Frontend profil

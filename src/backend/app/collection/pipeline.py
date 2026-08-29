@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.collection.base import JobCollector, RawJob
 from app.db.models import JobOffer, JobSource, JobSourceOccurrence, RawJobSnapshot
+from app.deduplication.jobs import DuplicateDecision, JobDeduplicator
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class CollectionPipeline:
 
     def __init__(self, db: Session) -> None:
         self.db = db
+        self.deduplicator = JobDeduplicator(db)
 
     def run(self, source: JobCollector) -> PipelineResult:
         """Collect, snapshot, normalize and persist raw jobs for a single source."""
@@ -56,9 +58,7 @@ class CollectionPipeline:
         return result
 
     def _ensure_source(self, source: JobCollector) -> JobSource:
-        existing = self.db.scalar(
-            select(JobSource).where(JobSource.name == source.source_name)
-        )
+        existing = self.db.scalar(select(JobSource).where(JobSource.name == source.source_name))
         if existing is not None:
             return existing
 
@@ -76,27 +76,71 @@ class CollectionPipeline:
     def _persist_one(self, source: JobSource, raw_job: RawJob) -> None:
         self._validate_raw_job(raw_job)
 
+        normalized_title = self._normalize_title(raw_job.title)
+        normalized_company = self._normalize_company(raw_job.company_name)
+        normalized_city = self._normalize_city(raw_job.location_raw)
+        normalized_contract = self._normalize_contract(raw_job.contract_type_raw)
+        content_hash = self._content_hash(raw_job)
+
         snapshot = RawJobSnapshot(
             source_id=source.id,
             external_job_id=raw_job.external_job_id,
             source_url=raw_job.source_url,
             payload=self._payload_for_snapshot(raw_job),
             raw_html=None,
-            content_hash=self._content_hash(raw_job),
+            content_hash=content_hash,
             collected_at=datetime.now(UTC),
         )
         self.db.add(snapshot)
         self.db.flush()
 
+        duplicate_decision = self.deduplicator.decide(
+            title=normalized_title,
+            company_name=normalized_company,
+            city=normalized_city,
+            contract_type=normalized_contract,
+            source_id=source.id,
+            external_job_id=raw_job.external_job_id,
+            source_url=raw_job.source_url,
+            content_hash=content_hash,
+        )
+
+        if duplicate_decision.decision == DuplicateDecision.CONFIRMED_DUPLICATE:
+            existing_offer = duplicate_decision.job_offer
+            if existing_offer is None:
+                raise ValueError("Confirmed duplicate requires an existing canonical offer")
+
+            occurrence = self.db.scalar(
+                select(JobSourceOccurrence).where(
+                    JobSourceOccurrence.job_offer_id == existing_offer.id,
+                    JobSourceOccurrence.source_id == source.id,
+                    JobSourceOccurrence.external_job_id == raw_job.external_job_id,
+                )
+            )
+            if occurrence is None:
+                occurrence = JobSourceOccurrence(
+                    job_offer_id=existing_offer.id,
+                    source_id=source.id,
+                    external_job_id=raw_job.external_job_id,
+                    source_url=raw_job.source_url,
+                    collected_at=datetime.now(UTC),
+                    is_primary=True,
+                    status="active",
+                    created_at=datetime.now(UTC),
+                )
+                self.db.add(occurrence)
+                self.db.flush()
+            return
+
         job_offer = JobOffer(
-            title=self._normalize_title(raw_job.title),
-            company_name=self._normalize_company(raw_job.company_name),
+            title=normalized_title,
+            company_name=normalized_company,
             description=raw_job.description,
             normalized_description=raw_job.description,
-            contract_type=self._normalize_contract(raw_job.contract_type_raw),
+            contract_type=normalized_contract,
             job_type=self._normalize_job_type(raw_job.metadata.get("job_type")),
             location_text=raw_job.location_raw,
-            city=self._normalize_city(raw_job.location_raw),
+            city=normalized_city,
             country=self._normalize_country(raw_job.metadata.get("country")),
             remote_type=self._normalize_remote(raw_job.remote_type_raw),
             salary_min=self._normalize_salary_min(raw_job.salary_raw),

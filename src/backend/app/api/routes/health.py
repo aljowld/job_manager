@@ -1,11 +1,11 @@
 """Health check endpoints."""
 
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
 from app.core.exceptions import DatabaseError
-from fastapi import APIRouter, Depends
 
 router = APIRouter(tags=["health"])
 

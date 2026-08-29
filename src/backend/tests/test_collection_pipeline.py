@@ -77,7 +77,7 @@ def test_pipeline_exposes_recorded_provenance_in_job_occurrences(db_session: Ses
     assert occurrence.external_job_id == "fake-2001"
 
 
-def test_content_hash_is_deterministic_for_same_payload() -> None:
+def test_content_hash_is_deterministic_for_same_payload(db_session: Session) -> None:
     """The snapshot hash is stable across process runs for identical content."""
     raw_job = RawJob(
         source_name="fake_jobs",
@@ -119,6 +119,188 @@ def test_content_hash_is_deterministic_for_same_payload() -> None:
 
     assert first_hash == second_hash
     assert len(first_hash) == 64
+
+
+def test_job_fingerprint_is_deterministic_and_conservative() -> None:
+    """The fingerprint normalizes whitespace and casing but does not include unstable DB timestamps."""
+    from app.deduplication.jobs import JobDeduplicator
+
+    fingerprint_a = JobDeduplicator._job_fingerprint(
+        title="  Senior   Python Developer  ",
+        company_name="  Acme   Corp ",
+        city=" Paris ",
+        contract_type=" CDI ",
+    )
+    fingerprint_b = JobDeduplicator._job_fingerprint(
+        title="Senior Python Developer",
+        company_name="Acme Corp",
+        city="Paris",
+        contract_type="CDI",
+    )
+
+    assert fingerprint_a == fingerprint_b
+    assert fingerprint_a == "senior python developer | acme corp | paris | cdi"
+
+
+def test_pipeline_reuses_existing_offer_for_same_source_and_external_id(db_session: Session) -> None:
+    """Recollecting the same source occurrence resolves to the same canonical job offer."""
+    class RepeatedJobSource:
+        source_name = "fake_jobs"
+        source_url = "https://fake.example/jobs"
+        collection_method = "fake"
+
+        def collect(self):
+            return [
+                RawJob(
+                    source_name="fake_jobs",
+                    external_job_id="repeat-1",
+                    source_url="https://fake.example/jobs/repeat-1",
+                    title="Platform Engineer",
+                    company_name="Acme",
+                    description="Manage infrastructure.",
+                    location_raw="Paris, France",
+                    contract_type_raw="CDI",
+                    remote_type_raw="hybrid",
+                    salary_raw="€80k - €100k",
+                    publication_date_raw="2026-08-15T10:00:00+00:00",
+                    experience_level_raw="Senior",
+                    technologies=["kubernetes"],
+                    metadata={"city": "Paris", "country": "FR", "job_type": "full_time"},
+                )
+            ]
+
+    pipeline = CollectionPipeline(db_session)
+
+    first = pipeline.run(RepeatedJobSource())
+    second = pipeline.run(RepeatedJobSource())
+
+    assert first.persisted == 1
+    assert second.persisted == 1
+    assert db_session.query(JobOffer).count() == 1
+    assert db_session.query(JobSourceOccurrence).count() == 1
+    assert db_session.query(RawJobSnapshot).count() == 2
+
+
+def test_pipeline_confirms_cross_source_duplicate_by_url(db_session: Session) -> None:
+    """Two different sources can share one canonical job when their normalized URLs match."""
+    class SourceA:
+        source_name = "source_a"
+        source_url = "https://jobs.example"
+        collection_method = "api"
+
+        def collect(self):
+            return [
+                RawJob(
+                    source_name=self.source_name,
+                    external_job_id="source-a-42",
+                    source_url="https://jobs.example/offers/42#top",
+                    title="Backend Engineer",
+                    company_name="Acme",
+                    description="Build APIs.",
+                    location_raw="Paris, France",
+                    contract_type_raw="CDI",
+                    remote_type_raw="hybrid",
+                    salary_raw="€80k - €100k",
+                    publication_date_raw="2026-08-10T09:00:00+00:00",
+                    experience_level_raw="Senior",
+                    technologies=["python"],
+                    metadata={"city": "Paris", "country": "FR", "job_type": "full_time"},
+                )
+            ]
+
+    class SourceB:
+        source_name = "source_b"
+        source_url = "https://mirror.example"
+        collection_method = "feed"
+
+        def collect(self):
+            return [
+                RawJob(
+                    source_name=self.source_name,
+                    external_job_id="source-b-99",
+                    source_url="https://jobs.example/offers/42",
+                    title="Backend Engineer",
+                    company_name="Acme",
+                    description="Build APIs.",
+                    location_raw="Paris, France",
+                    contract_type_raw="CDI",
+                    remote_type_raw="hybrid",
+                    salary_raw="€80k - €100k",
+                    publication_date_raw="2026-08-10T09:00:00+00:00",
+                    experience_level_raw="Senior",
+                    technologies=["python"],
+                    metadata={"city": "Paris", "country": "FR", "job_type": "full_time"},
+                )
+            ]
+
+    pipeline = CollectionPipeline(db_session)
+    pipeline.run(SourceA())
+    result = pipeline.run(SourceB())
+
+    assert result.persisted == 1
+    assert db_session.query(JobOffer).count() == 1
+    assert db_session.query(JobSourceOccurrence).count() == 2
+
+
+def test_pipeline_keeps_ambiguous_similar_jobs_distinct(db_session: Session) -> None:
+    """Ambiguous near-identical offers are not merged aggressively during Step 9."""
+    class SourceX:
+        source_name = "source_x"
+        source_url = "https://source-x.example"
+        collection_method = "api"
+
+        def collect(self):
+            return [
+                RawJob(
+                    source_name=self.source_name,
+                    external_job_id="x-1",
+                    source_url="https://source-x.example/1",
+                    title="Senior Python Developer",
+                    company_name="Acme",
+                    description="Backend work.",
+                    location_raw="Paris, France",
+                    contract_type_raw="CDI",
+                    remote_type_raw="hybrid",
+                    salary_raw="€70k - €95k",
+                    publication_date_raw="2026-08-12T12:00:00+00:00",
+                    experience_level_raw="Senior",
+                    technologies=["python"],
+                    metadata={"city": "Paris", "country": "FR", "job_type": "full_time"},
+                )
+            ]
+
+    class SourceY:
+        source_name = "source_y"
+        source_url = "https://source-y.example"
+        collection_method = "feed"
+
+        def collect(self):
+            return [
+                RawJob(
+                    source_name=self.source_name,
+                    external_job_id="y-1",
+                    source_url="https://source-y.example/1",
+                    title="Senior Python Developer",
+                    company_name="Acme",
+                    description="Different marketing backend role.",
+                    location_raw="Paris, France",
+                    contract_type_raw="CDI",
+                    remote_type_raw="hybrid",
+                    salary_raw="€80k - €100k",
+                    publication_date_raw="2026-08-13T12:00:00+00:00",
+                    experience_level_raw="Senior",
+                    technologies=["python"],
+                    metadata={"city": "Paris", "country": "FR", "job_type": "full_time"},
+                )
+            ]
+
+    pipeline = CollectionPipeline(db_session)
+    pipeline.run(SourceX())
+    result = pipeline.run(SourceY())
+
+    assert result.persisted == 1
+    assert db_session.query(JobOffer).count() == 2
+    assert db_session.query(JobSourceOccurrence).count() == 2
 
 
 def test_salary_normalization_handles_real_fake_formats_conservatively() -> None:

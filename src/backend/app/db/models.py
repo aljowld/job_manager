@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from app.db.base import Base
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -13,8 +14,6 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base
 
 
 def utc_now() -> datetime:
