@@ -13,10 +13,14 @@ Chaque étape doit rester suffisamment petite pour pouvoir être :
 * validée ;
 * commitée indépendamment.
 
-Le projet ne doit pas avancer vers l'étape suivante tant que :
+Une étape suivante ne doit pas être commencée automatiquement.
 
-1. les critères essentiels de validation de l'étape courante ne sont pas satisfaits ; ou
-2. les limitations restantes ne sont pas explicitement documentées et acceptées.
+Une étape peut être considérée comme terminée lorsque :
+
+1. ses critères essentiels sont satisfaits ;
+2. les régressions introduites par l'étape sont corrigées ;
+3. les limitations restantes sont explicitement documentées ;
+4. les validations applicables ont été réellement exécutées.
 
 Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'architecture du MVP.
 
@@ -67,7 +71,7 @@ Transformer la spécification produit en une architecture cohérente, maintenabl
 
 * architecture de monolithe modulaire définie ;
 * périmètre du MVP défini ;
-* structure cible du repository établie ;
+* structure du repository définie ;
 * domaines backend et responsabilités identifiés ;
 * modèle de données initial défini ;
 * pipeline général de collecte défini ;
@@ -82,6 +86,7 @@ Transformer la spécification produit en une architecture cohérente, maintenabl
 ### Documentation principale
 
 * `docs/ARCHITECTURE.md`
+* `docs/PROJECT_SPEC.md`
 * `docs/adr/`
 
 ### Critères de validation
@@ -116,12 +121,31 @@ Mettre en place le squelette technique initial du projet et la chaîne de qualit
 * `.env.example` ;
 * documentation de développement initiale.
 
+### Organisation actuelle
+
+Le projet a depuis été réorganisé sous :
+
+```text
+/
+├── pyproject.toml
+├── uv.lock
+│
+└── src/
+    ├── backend/
+    │   ├── app/
+    │   └── tests/
+    │
+    └── frontend/
+```
+
+Le repository root constitue la racine du projet Python.
+
 ### Outils Python retenus
 
 * `uv` — projet, environnement et dépendances ;
-* `ruff` — linting et formatage ;
-* `ty` — vérification statique des types ;
-* `pytest` — tests backend.
+* Ruff — linting et formatage du code applicatif ;
+* ty — vérification statique du code applicatif ;
+* pytest — tests backend.
 
 ### Critères de validation
 
@@ -150,14 +174,14 @@ Permettre un démarrage local reproductible de l'application avec Docker et Post
 * service PostgreSQL ;
 * service backend ;
 * service frontend ;
-* `Dockerfile.backend` ;
-* `Dockerfile.frontend` ;
+* Dockerfile backend ;
+* Dockerfile frontend ;
 * volume persistant PostgreSQL ;
 * variables Docker/PostgreSQL ;
 * `.env.example` ;
 * health checks ;
-* configuration cohérente entre backend et PostgreSQL ;
-* documentation de démarrage Docker et local.
+* configuration cohérente backend/PostgreSQL ;
+* documentation de développement locale.
 
 ### Inclus
 
@@ -187,6 +211,15 @@ Permettre un démarrage local reproductible de l'application avec Docker et Post
 * [x] variables d'environnement documentées ;
 * [x] health checks configurés.
 
+### Point de vigilance
+
+Toute évolution de l'organisation du repository doit préserver la cohérence des :
+
+* contexts Docker ;
+* chemins `COPY` ;
+* volumes ;
+* chemins vers `pyproject.toml` et `uv.lock`.
+
 ---
 
 ## Étape 3 — Modèle de données initial et persistance
@@ -195,13 +228,13 @@ Permettre un démarrage local reproductible de l'application avec Docker et Post
 
 ### Objectif
 
-Mettre en place la couche de persistance PostgreSQL avec SQLAlchemy 2 et Alembic.
+Mettre en place la couche de persistence PostgreSQL avec SQLAlchemy 2 et Alembic.
 
 ### Réalisé
 
 #### Configuration
 
-* configuration centralisée via `config.py` ;
+* configuration centralisée ;
 * `DATABASE_URL` ;
 * `APP_ENV` ;
 * `LOG_LEVEL`.
@@ -212,7 +245,7 @@ Mettre en place la couche de persistance PostgreSQL avec SQLAlchemy 2 et Alembic
 * engine SQLAlchemy ;
 * `SessionLocal` ;
 * gestion centralisée des sessions ;
-* dépendance `get_db()`.
+* dépendance de session réutilisable.
 
 #### Modèles initiaux
 
@@ -221,27 +254,26 @@ Mettre en place la couche de persistance PostgreSQL avec SQLAlchemy 2 et Alembic
 * `JobOffer` ;
 * `JobSourceOccurrence`.
 
-Ces modèles constituent la base structurelle de la gestion future des offres et de leur provenance.
+Ces modèles constituent la base structurelle de la gestion des offres et de leur provenance.
 
 #### Alembic
 
 * Alembic relié à la metadata SQLAlchemy ;
-* migration initiale créée :
-
-  * `20240829_000001_initial_persistence_schema.py`.
+* migration initiale créée.
 
 #### Tests
 
-* `test_persistence_setup.py` ;
-* tests des modèles et de la configuration de persistence.
+* tests de configuration de persistence ;
+* tests des modèles SQLAlchemy.
 
 ### Principes architecturaux validés
 
 * PostgreSQL est la source de vérité ;
-* les données brutes peuvent être conservées indépendamment des offres normalisées ;
-* une offre canonique peut avoir plusieurs occurrences provenant de plusieurs sources ;
-* la déduplication future ne devra pas supprimer destructivement les occurrences sources ;
-* les migrations sont gérées avec Alembic et non avec `Base.metadata.create_all()` en production.
+* les données brutes sont séparées des offres canonisées ;
+* une offre canonique peut avoir plusieurs occurrences ;
+* la déduplication sera non destructive ;
+* les migrations sont gérées avec Alembic ;
+* `Base.metadata.create_all()` ne remplace pas Alembic dans le fonctionnement normal.
 
 ### Critères de validation
 
@@ -250,10 +282,7 @@ Ces modèles constituent la base structurelle de la gestion future des offres et
 * [x] modèles initiaux créés ;
 * [x] metadata Alembic configurée ;
 * [x] migration initiale créée ;
-* [x] tests de persistence présents ;
-* [x] Ruff valide ;
-* [x] ty valide ;
-* [x] pytest valide.
+* [x] tests de persistence présents.
 
 ---
 
@@ -278,12 +307,11 @@ Mettre en place une fondation HTTP propre, robuste et extensible avant l'ajout d
 
 * `GET /health` ;
 * `GET /health/ready` ;
-* vérification de disponibilité de la base pour la readiness.
+* vérification de disponibilité de PostgreSQL pour la readiness.
 
 #### Persistence
 
-* dépendance FastAPI `get_db()` ;
-* injection des sessions SQLAlchemy.
+* dépendance FastAPI d'injection de session SQLAlchemy.
 
 #### Gestion des erreurs
 
@@ -293,15 +321,14 @@ Hiérarchie initiale :
 * `DatabaseError` ;
 * `ServiceUnavailableError`.
 
-Gestion centralisée des exceptions avec format de réponse API cohérent.
+Gestion centralisée des exceptions avec un format API cohérent.
 
 #### Configuration HTTP
 
 * CORS ;
-* `localhost:5173` ;
-* `localhost:3000`.
+* développement frontend local supporté.
 
-#### Documentation API
+#### Documentation
 
 * OpenAPI ;
 * Swagger UI ;
@@ -309,24 +336,14 @@ Gestion centralisée des exceptions avec format de réponse API cohérent.
 
 #### Tests
 
-* `test_api_setup.py` ;
-* `test_error_handling.py` ;
-* `test_health.py`.
-
-### Validations réalisées
-
-* [x] `uv lock --check` ;
-* [x] `uv run ruff check .` ;
-* [x] formatage Ruff ;
-* [x] `uv run ty check` ;
-* [x] `uv run pytest` ;
-* [x] 12 tests passants ;
-* [x] démarrage FastAPI validé.
+* tests de création de l'application ;
+* tests OpenAPI ;
+* tests des endpoints de santé ;
+* tests de gestion centralisée des erreurs.
 
 ### Explicitement non inclus
 
-* endpoints métier des offres ;
-* profil utilisateur ;
+* domaine des offres ;
 * candidatures ;
 * collecte ;
 * normalisation ;
@@ -335,91 +352,122 @@ Gestion centralisée des exceptions avec format de réponse API cohérent.
 * authentification ;
 * NLP.
 
+### Critères de validation
+
+* [x] application factory fonctionnelle ;
+* [x] routeur versionné ;
+* [x] endpoints de santé ;
+* [x] injection des sessions ;
+* [x] gestion centralisée des erreurs ;
+* [x] OpenAPI disponible ;
+* [x] tests API fondamentaux présents.
+
 ---
 
-# Phase B — Premier domaine métier
+# Phase B — Domaines métier
 
 ## Étape 5 — Profil utilisateur et préférences
 
-**État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
 Créer la première fonctionnalité métier complète de l'application : le profil utilisateur et ses préférences de recherche.
 
-Le profil doit constituer la référence structurée utilisée ultérieurement par le moteur de matching.
+Le profil constitue la référence structurée qui sera utilisée ultérieurement par le moteur de matching.
 
-### Inclus
+### Réalisé
 
-* modèle `UserProfile` ;
-* modèle de préférences ;
-* migrations Alembic ;
-* schémas Pydantic ;
-* repository ou service de persistence si nécessaire ;
-* logique applicative du profil ;
-* endpoints :
-
-  * `GET /api/v1/profile`
-  * `PUT /api/v1/profile`
-* tests unitaires ;
-* tests d'intégration API/base de données.
-
-### Données à prévoir progressivement
-
-* formation ;
-* diplômes ;
-* expériences ;
+* profil utilisateur mono-utilisateur ;
+* persistence SQLAlchemy du profil ;
+* relations et données structurées associées ;
 * compétences ;
 * technologies ;
 * langues ;
-* localisation ;
-* mobilité ;
-* préférence remote ;
-* types de contrat ;
-* types de poste ;
-* industries ;
-* rôles préférés ;
-* rôles exclus ;
-* salaire souhaité ;
-* disponibilité ;
-* durée de stage ;
-* entreprises préférées ;
-* entreprises exclues.
+* préférences ;
+* schémas Pydantic de lecture/écriture ;
+* validation des entrées ;
+* endpoint :
 
-### Niveaux de préférence
+```text
+GET /api/v1/profile
+```
 
-Prévoir conceptuellement :
+* endpoint :
 
-* `REQUIRED`
-* `VERY_IMPORTANT`
-* `IMPORTANT`
-* `BONUS`
-* `AVOID`
-* `EXCLUDED`
+```text
+PUT /api/v1/profile
+```
 
-Les préférences simples, les critères obligatoires et les critères éliminatoires doivent rester distinguables.
+* comportement explicite lorsque le profil n'existe pas ;
+* remplacement idempotent du profil ;
+* mise à jour transactionnelle des relations ;
+* tests API du profil ;
+* test de régression sur les PUT successifs.
+
+### Stratégie mono-utilisateur
+
+L'application gère actuellement un unique profil utilisateur actif.
+
+Aucun système de :
+
+* comptes ;
+* login ;
+* JWT ;
+* rôles ;
+* permissions
+
+n'est nécessaire pour le MVP local.
+
+### Comportement API actuel
+
+Si aucun profil n'existe :
+
+```text
+GET /api/v1/profile
+```
+
+retourne :
+
+```text
+404 PROFILE_NOT_FOUND
+```
+
+Le `PUT` est idempotent.
+
+Des requêtes identiques répétées ne doivent pas créer de doublons dans les données enfants.
+
+### Correctif de régression important
+
+Un problème a été identifié lors de PUT successifs :
+
+> les lignes enfants associées au profil pouvaient rester persistées et provoquer des doublons sur les contraintes uniques.
+
+La stratégie retenue remplace explicitement les relations concernées dans la même opération transactionnelle avant de persister l'état canonique du profil.
 
 ### Explicitement non inclus
 
-* interface frontend du profil ;
-* import de CV ;
+* frontend du profil ;
+* import CV ;
 * matching ;
-* apprentissage des préférences ;
-* recommandations automatiques ;
+* apprentissage automatique des préférences ;
+* recommandations ;
 * NLP.
 
 ### Critères de validation
 
-* [ ] modèles créés ;
-* [ ] migration créée et applicable ;
-* [ ] lecture du profil fonctionnelle ;
-* [ ] modification du profil fonctionnelle ;
-* [ ] validation Pydantic fonctionnelle ;
-* [ ] tests présents ;
-* [ ] Ruff valide ;
-* [ ] ty valide ;
-* [ ] pytest valide ;
-* [ ] documentation mise à jour.
+* [x] modèle de profil créé ;
+* [x] préférences structurées ;
+* [x] persistence fonctionnelle ;
+* [x] schémas Pydantic créés ;
+* [x] lecture du profil fonctionnelle ;
+* [x] modification du profil fonctionnelle ;
+* [x] PUT idempotent ;
+* [x] absence de duplication lors des remplacements ;
+* [x] gestion du profil absent ;
+* [x] tests de régression présents ;
+* [x] tests ciblés du profil passants ;
+* [x] documentation mise à jour.
 
 ---
 
@@ -429,55 +477,111 @@ Les préférences simples, les critères obligatoires et les critères éliminat
 
 ### Objectif
 
-Transformer les modèles de persistence `JobOffer` en véritable domaine consultable par l'API.
+Transformer les modèles de persistence `JobOffer` existants en véritable domaine consultable par l'API.
+
+Cette étape travaille sur des offres déjà présentes en base.
+
+Elle ne collecte encore aucune donnée externe.
 
 ### Inclus
 
 * schémas Pydantic des offres ;
-* repository des offres si nécessaire ;
-* service de consultation ;
+* repository spécifique si nécessaire ;
+* service de consultation si nécessaire ;
 * pagination ;
 * filtres initiaux ;
 * tri ;
 * endpoint :
 
-  * `GET /api/v1/jobs`
+```text
+GET /api/v1/jobs
+```
+
 * endpoint :
 
-  * `GET /api/v1/jobs/{id}`
-* gestion propre des offres inexistantes ;
+```text
+GET /api/v1/jobs/{id}
+```
+
+* gestion des offres inexistantes ;
+* exposition contrôlée de la provenance lorsque pertinent ;
 * tests API ;
 * tests de persistence pertinents.
 
+### Pagination
+
+Prévoir une pagination simple et explicite, par exemple :
+
+```text
+page
+page_size
+total
+items
+```
+
+Le `page_size` doit être borné raisonnablement.
+
+La pagination doit être appliquée après les filtres.
+
 ### Filtres initiaux possibles
+
+Uniquement selon les champs réellement disponibles dans `JobOffer` :
 
 * localisation ;
 * type de contrat ;
 * remote ;
 * date de publication ;
 * entreprise ;
-* statut.
+* statut ;
+* type de poste.
 
-Les filtres avancés pourront être ajoutés progressivement.
+Ne pas créer artificiellement des champs pour satisfaire un filtre.
+
+### Tri
+
+Prévoir un ensemble fermé de tris autorisés.
+
+Exemples possibles :
+
+* date de publication ;
+* date de création ;
+* titre.
+
+Ne jamais transformer directement une valeur arbitraire fournie par l'utilisateur en nom de colonne SQL.
+
+### Provenance
+
+Le détail d'une offre peut exposer les informations pertinentes issues de `JobSourceOccurrence`, telles que :
+
+* source ;
+* identifiant externe ;
+* URL originale.
+
+Les `RawJobSnapshot` ne doivent pas être exposés directement par défaut dans l'API métier.
 
 ### Explicitement non inclus
 
+* collecteur ;
 * scraping ;
+* normalisation ;
+* déduplication ;
 * matching ;
-* déduplication algorithmique ;
 * recherche sémantique ;
-* frontend métier.
+* frontend métier ;
+* favoris.
 
 ### Critères de validation
 
+* [ ] schémas Pydantic définis ;
 * [ ] liste paginée fonctionnelle ;
 * [ ] détail d'une offre fonctionnel ;
 * [ ] filtres essentiels fonctionnels ;
+* [ ] tri contrôlé ;
+* [ ] provenance exposée lorsque pertinente ;
 * [ ] erreurs API cohérentes ;
 * [ ] tests présents ;
-* [ ] Ruff valide ;
-* [ ] ty valide ;
-* [ ] pytest valide.
+* [ ] aucune régression introduite ;
+* [ ] quality gate applicable validé.
 
 ---
 
@@ -489,31 +593,31 @@ Les filtres avancés pourront être ajoutés progressivement.
 
 ### Objectif
 
-Créer une source entièrement locale permettant de tester le pipeline sans dépendre d'un site externe.
+Créer une source entièrement locale permettant de tester le système sans dépendre d'un site externe.
 
 ### Inclus
 
 * abstraction commune des sources ;
 * `FakeJobSource` ou équivalent ;
 * fixtures réalistes ;
-* offres avec différents contrats, villes et compétences ;
 * cas volontairement incomplets ;
-* cas volontairement similaires pour préparer la déduplication ;
+* offres avec différents contrats et localisations ;
+* offres similaires pour préparer la déduplication ;
 * snapshots bruts ;
 * tests.
 
 ### Jeu de données fictif
 
-Les fixtures doivent permettre de représenter notamment :
+Les fixtures doivent notamment permettre de représenter :
 
-* offres classiques ;
+* offre classique ;
 * remote ;
 * hybride ;
 * différentes villes ;
 * différents contrats ;
 * salaire absent ;
 * expérience absente ;
-* technologies diverses ;
+* technologies différentes ;
 * offres potentiellement dupliquées.
 
 ### Explicitement non inclus
@@ -521,17 +625,17 @@ Les fixtures doivent permettre de représenter notamment :
 * connexion à un site externe ;
 * scraping réel ;
 * Playwright ;
-* matching ;
-* déduplication réelle.
+* déduplication effective ;
+* matching.
 
 ### Critères de validation
 
-* [ ] interface de source définie ;
+* [ ] abstraction de source définie ;
 * [ ] collecteur fictif fonctionnel ;
 * [ ] fixtures déterministes ;
 * [ ] données brutes produites ;
-* [ ] tests sans dépendance réseau ;
-* [ ] quality gate valide.
+* [ ] aucune dépendance réseau dans les tests ;
+* [ ] quality gate applicable validé.
 
 ---
 
@@ -567,42 +671,42 @@ persist
 * validation des données brutes ;
 * parsing ;
 * normalisation ;
-* création des snapshots ;
+* snapshots ;
 * persistence des offres ;
 * gestion des erreurs partielles ;
 * logs ;
-* tests du pipeline complet.
+* tests du pipeline.
 
 ### Normalisation initiale
 
 Prévoir notamment :
 
-* titres ;
-* entreprises ;
-* URLs ;
-* localisations ;
+* titre ;
+* entreprise ;
+* URL ;
+* localisation ;
 * pays ;
-* villes ;
+* ville ;
 * contrat ;
 * remote ;
 * dates ;
-* salaires lorsque disponibles.
+* salaire lorsque disponible.
 
 ### Explicitement non inclus
 
 * déduplication avancée ;
-* scraping réel ;
+* source réelle ;
 * matching ;
 * NLP.
 
 ### Critères de validation
 
-* [ ] pipeline complet fonctionnel avec FakeJobSource ;
+* [ ] pipeline complet fonctionnel avec le collecteur fictif ;
 * [ ] snapshots conservés ;
 * [ ] offres normalisées persistées ;
-* [ ] erreurs d'une offre n'arrêtant pas nécessairement tout le batch ;
+* [ ] erreur sur une offre n'arrêtant pas nécessairement tout le batch ;
 * [ ] tests d'intégration présents ;
-* [ ] quality gate valide.
+* [ ] quality gate applicable validé.
 
 ---
 
@@ -616,7 +720,7 @@ Identifier plusieurs occurrences représentant probablement la même offre sans 
 
 ### Stratégie
 
-Déduplication progressive utilisant plusieurs niveaux :
+Déduplication progressive :
 
 1. identifiants forts ;
 2. URL canonique ;
@@ -624,26 +728,29 @@ Déduplication progressive utilisant plusieurs niveaux :
 4. fingerprint déterministe ;
 5. similarité floue si nécessaire.
 
-### Résultats possibles
+### Résultats conceptuels
 
-* `NOT_DUPLICATE`
-* `POSSIBLE_DUPLICATE`
-* `CONFIRMED_DUPLICATE`
+```text
+NOT_DUPLICATE
+POSSIBLE_DUPLICATE
+CONFIRMED_DUPLICATE
+```
 
 ### Principe fondamental
 
-Une occurrence source ne doit pas être supprimée lorsqu'elle correspond à une offre déjà connue.
+Une occurrence source ne doit pas être détruite lorsqu'elle correspond à une offre déjà connue.
 
-Elle doit être reliée à l'offre canonique correspondante.
+Elle doit être reliée à l'offre canonique.
 
 ### Inclus
 
 * fingerprints ;
-* normalisation nécessaire à la comparaison ;
+* normalisation nécessaire aux comparaisons ;
 * stratégie de décision ;
-* association des occurrences ;
-* tests unitaires ;
-* tests du pipeline.
+* association aux offres canoniques ;
+* tests de doublons ;
+* tests de faux positifs ;
+* tests de faux négatifs.
 
 ### Explicitement non inclus
 
@@ -656,9 +763,9 @@ Elle doit être reliée à l'offre canonique correspondante.
 
 * [ ] doublons exacts détectés ;
 * [ ] provenance conservée ;
-* [ ] cas ambigus non fusionnés agressivement ;
-* [ ] tests de faux positifs et faux négatifs ;
-* [ ] quality gate valide.
+* [ ] cas ambigus traités de façon conservatrice ;
+* [ ] tests des cas limites ;
+* [ ] quality gate applicable validé.
 
 ---
 
@@ -672,7 +779,7 @@ Brancher une seule source externe réelle sur le pipeline déjà validé.
 
 ### Avant toute implémentation
 
-Créer ou mettre à jour une fiche source contenant :
+Créer une fiche source :
 
 ```text
 Source:
@@ -693,10 +800,10 @@ Remarques:
 ### Ordre de préférence
 
 1. API officielle ;
-2. flux structuré ;
+2. feed structuré ;
 3. HTTP + parsing ;
 4. crawler spécialisé ;
-5. navigateur automatisé uniquement si nécessaire et autorisé.
+5. navigateur automatisé uniquement si nécessaire et approprié.
 
 ### Interdictions
 
@@ -711,21 +818,21 @@ Ne jamais contourner :
 ### Inclus
 
 * une seule source réelle ;
-* intégration à l'abstraction existante ;
-* gestion des timeouts ;
-* gestion des erreurs réseau ;
+* intégration avec l'abstraction existante ;
+* timeouts ;
+* erreurs réseau ;
 * rate limiting raisonnable ;
-* fixtures de tests ;
-* tests ne dépendant pas directement du site réel.
+* fixtures ;
+* tests sans dépendance directe au site réel.
 
 ### Critères de validation
 
-* [ ] conformité de la méthode de collecte étudiée ;
-* [ ] fiche source documentée ;
+* [ ] méthode de collecte étudiée et documentée ;
+* [ ] fiche source créée ;
 * [ ] connecteur isolé du cœur métier ;
 * [ ] pipeline existant réutilisé ;
 * [ ] tests à base de fixtures ;
-* [ ] quality gate valide.
+* [ ] quality gate applicable validé.
 
 ---
 
@@ -756,28 +863,35 @@ Classer les offres en fonction du profil utilisateur avec un moteur déterminist
 
 ### Critères éliminatoires
 
-Prévoir des critères distincts du score, notamment :
+Séparer les contraintes bloquantes du score.
+
+Exemples :
 
 * contrat obligatoire ;
 * localisation incompatible ;
 * durée incompatible ;
 * disponibilité ;
 * compétence obligatoire ;
-* langue obligatoire.
+* langue obligatoire ;
+* rôle exclu.
 
 ### Gestion de l'incertitude
 
-Utiliser explicitement :
+Utiliser :
 
-* `MATCH`
-* `MISMATCH`
-* `UNKNOWN`
+```text
+MATCH
+MISMATCH
+UNKNOWN
+```
 
-Une donnée absente dans l'offre ne doit pas automatiquement être considérée comme incompatible.
+Une information absente ne doit pas automatiquement être interprétée comme incompatible.
 
 ### Versionnement
 
-Le résultat doit enregistrer la version du moteur, par exemple :
+Le résultat doit conserver la version du moteur.
+
+Exemple :
 
 ```text
 deterministic-v1
@@ -785,7 +899,7 @@ deterministic-v1
 
 ### Explicabilité
 
-Le résultat doit fournir :
+Retourner notamment :
 
 * score global ;
 * composantes ;
@@ -807,10 +921,10 @@ Le résultat doit fournir :
 * [ ] poids configurables ;
 * [ ] critères bloquants ;
 * [ ] gestion `UNKNOWN` ;
-* [ ] explication générée à partir du calcul réel ;
+* [ ] explication dérivée du calcul réel ;
 * [ ] version du moteur conservée ;
 * [ ] tests unitaires approfondis ;
-* [ ] quality gate valide.
+* [ ] quality gate applicable validé.
 
 ---
 
@@ -824,9 +938,7 @@ Le résultat doit fournir :
 
 Créer la première interface réellement utilisable de consultation des offres.
 
-### Inclus
-
-#### Liste
+### Liste
 
 Afficher notamment :
 
@@ -839,15 +951,17 @@ Afficher notamment :
 * score lorsqu'il existe ;
 * compétences principales.
 
-#### Fonctionnalités
+### Fonctionnalités
 
 * pagination ;
 * recherche textuelle simple ;
 * filtres ;
 * tri ;
-* navigation vers le détail.
+* navigation vers le détail ;
+* gestion du chargement ;
+* gestion des erreurs API.
 
-#### Détail
+### Détail
 
 Afficher :
 
@@ -870,10 +984,10 @@ Afficher :
 ### Critères de validation
 
 * [ ] liste fonctionnelle ;
-* [ ] chargement API géré ;
-* [ ] erreurs API gérées ;
-* [ ] filtres essentiels ;
+* [ ] pagination ;
+* [ ] filtres ;
 * [ ] détail fonctionnel ;
+* [ ] erreurs API correctement affichées ;
 * [ ] tests frontend principaux.
 
 ---
@@ -884,7 +998,7 @@ Afficher :
 
 ### Objectif
 
-Permettre à l'utilisateur de consulter et modifier son profil depuis l'interface.
+Permettre de consulter et modifier le profil depuis l'interface.
 
 ### Inclus
 
@@ -897,7 +1011,7 @@ Permettre à l'utilisateur de consulter et modifier son profil depuis l'interfac
 * contrats ;
 * préférences ;
 * critères obligatoires ;
-* critères à éviter ;
+* exclusions ;
 * validation frontend ;
 * synchronisation API.
 
@@ -908,11 +1022,11 @@ Permettre à l'utilisateur de consulter et modifier son profil depuis l'interfac
 
 ### Critères de validation
 
-* [ ] lecture du profil ;
+* [ ] lecture ;
 * [ ] modification ;
 * [ ] sauvegarde ;
 * [ ] validation ;
-* [ ] erreurs API gérées ;
+* [ ] gestion des erreurs API ;
 * [ ] tests frontend principaux.
 
 ---
@@ -927,10 +1041,12 @@ Permettre à l'utilisateur d'indiquer ses décisions sur les offres.
 
 ### Interactions initiales
 
-* `view`
-* `favorite`
-* `reject`
-* `archive`
+```text
+view
+favorite
+reject
+archive
+```
 
 ### Inclus
 
@@ -944,15 +1060,15 @@ Permettre à l'utilisateur d'indiquer ses décisions sur les offres.
 
 ### Explicitement non inclus
 
-* apprentissage automatique du comportement ;
-* ajustement automatique des préférences.
+* apprentissage automatique ;
+* modification automatique des préférences.
 
 ### Critères de validation
 
 * [ ] favoris persistés ;
 * [ ] rejets persistés ;
 * [ ] archives persistées ;
-* [ ] interface mise à jour ;
+* [ ] frontend mis à jour ;
 * [ ] tests backend et frontend.
 
 ---
@@ -967,16 +1083,18 @@ Permettre le suivi complet des candidatures.
 
 ### Statuts initiaux
 
-* `TO_REVIEW`
-* `FAVORITE`
-* `TO_PREPARE`
-* `APPLIED`
-* `INTERVIEW`
-* `TECHNICAL_TEST`
-* `OFFER_RECEIVED`
-* `REJECTED`
-* `WITHDRAWN`
-* `ARCHIVED`
+```text
+TO_REVIEW
+FAVORITE
+TO_PREPARE
+APPLIED
+INTERVIEW
+TECHNICAL_TEST
+OFFER_RECEIVED
+REJECTED
+WITHDRAWN
+ARCHIVED
+```
 
 ### Données possibles
 
@@ -1011,13 +1129,13 @@ Permettre le suivi complet des candidatures.
 
 ---
 
-# 🎯 Frontière MVP
+# Frontière MVP
 
 Les Étapes **0 à 15** constituent le chemin vers le MVP fonctionnel.
 
-À l'issue de l'Étape 15, l'application doit être utilisable sans dépendre d'un LLM ou d'une recherche vectorielle.
+À l'issue de l'Étape 15, l'application doit être utilisable sans LLM, embeddings ou recherche vectorielle.
 
-Le MVP doit permettre le flux suivant :
+Le flux principal doit fonctionner :
 
 ```text
 Source réelle
@@ -1043,7 +1161,7 @@ Favoris / rejets
 Suivi des candidatures
 ```
 
-Aucune fonctionnalité post-MVP ne doit être nécessaire au fonctionnement de ce flux.
+Les fonctionnalités post-MVP ne doivent pas être nécessaires au fonctionnement de ce flux.
 
 ---
 
@@ -1073,7 +1191,7 @@ Importer un CV et proposer des informations structurées à intégrer au profil.
 
 ### Principe
 
-Le CV complète le profil mais ne l'écrase jamais automatiquement.
+Le CV peut compléter le profil mais ne doit jamais l'écraser automatiquement.
 
 ---
 
@@ -1083,7 +1201,7 @@ Le CV complète le profil mais ne l'écrase jamais automatiquement.
 
 ### Objectif
 
-Améliorer l'extraction structurée du contenu des annonces.
+Améliorer l'extraction structurée des annonces.
 
 ### Cibles
 
@@ -1091,7 +1209,7 @@ Améliorer l'extraction structurée du contenu des annonces.
 * technologies ;
 * missions ;
 * langues ;
-* niveau d'expérience ;
+* expérience ;
 * niveau d'étude ;
 * catégories de poste.
 
@@ -1115,16 +1233,16 @@ PostgreSQL
 pgvector
 ```
 
-Ne pas introduire une base vectorielle séparée sans besoin démontré.
-
 ### Inclus
 
-* extension pgvector ;
+* pgvector ;
 * stratégie d'embeddings ;
 * abstraction `EmbeddingProvider` ;
-* stockage des embeddings ;
+* stockage ;
 * versionnement du modèle ;
 * recalcul contrôlé.
+
+Ne pas introduire une base vectorielle séparée sans besoin démontré.
 
 ---
 
@@ -1134,15 +1252,9 @@ Ne pas introduire une base vectorielle séparée sans besoin démontré.
 
 ### Objectif
 
-Permettre des recherches en langage naturel combinant plusieurs signaux.
+Permettre une recherche en langage naturel combinant plusieurs signaux.
 
-### Exemple
-
-> Je cherche un stage en machine learning à Paris avec Python et idéalement du NLP.
-
-### Approche cible
-
-Combiner :
+### Approche
 
 ```text
 filtres structurés
@@ -1176,7 +1288,7 @@ préférences observées
 
 Les préférences critiques ne doivent jamais être modifiées automatiquement.
 
-Le système peut seulement proposer des changements nécessitant confirmation.
+Le système peut proposer un changement nécessitant confirmation.
 
 ---
 
@@ -1222,12 +1334,12 @@ Notifier l'utilisateur lorsqu'une offre particulièrement pertinente apparaît.
 
 * notification interne ;
 * email ;
-* autres intégrations ultérieurement.
+* autres intégrations.
 
 ### Contraintes
 
 * seuil configurable ;
-* pas de notifications dupliquées ;
+* pas de notifications répétées inutilement ;
 * alertes désactivables.
 
 ---
@@ -1243,103 +1355,148 @@ Stabiliser l'ensemble du système après validation fonctionnelle.
 ### Axes
 
 * tests ;
-* couverture des cas limites ;
+* cas limites ;
 * performance ;
 * index PostgreSQL ;
 * sécurité ;
 * logs ;
-* gestion des erreurs ;
+* erreurs ;
 * UX ;
 * documentation ;
 * nettoyage architectural ;
 * suppression des abstractions devenues inutiles ;
-* vérification des dépendances ;
-* revue de confidentialité.
+* dépendances ;
+* confidentialité.
 
 ---
 
 # Quality gate général
 
-Pour toute étape backend, exécuter lorsque pertinent :
+Le repository root est la racine du projet Python.
+
+## Code applicatif backend
+
+Le code :
+
+```text
+src/backend/app/
+```
+
+est contrôlé par :
+
+* Ruff ;
+* Ruff format ;
+* ty.
+
+## Tests backend
+
+Les tests :
+
+```text
+src/backend/tests/
+```
+
+sont contrôlés par :
+
+* pytest.
+
+Les tests sont volontairement exclus de Ruff et ty.
+
+## Commandes
+
+Depuis la racine :
 
 ```bash
 uv lock --check
 uv run ruff check .
 uv run ruff format --check .
 uv run ty check
-uv run pytest
+uv run pytest src/backend/tests
 ```
 
-Une étape n'est pas considérée comme terminée si les contrôles applicables échouent, sauf limitation explicitement documentée et acceptée.
+Une étape ne doit pas introduire de nouvelles erreurs dans ces contrôles.
 
-Pour les étapes frontend, exécuter également les contrôles TypeScript, lint et tests configurés dans le projet.
+Si le quality gate révèle des erreurs, elles doivent être classées comme :
 
-Ne jamais déclarer une commande comme réussie si elle n'a pas réellement été exécutée.
+1. introduites ou affectées par l'étape courante ;
+2. préexistantes et indépendantes ;
+3. d'origine incertaine.
+
+Les erreurs appartenant à la première catégorie doivent être corrigées avant validation.
+
+Une erreur ne doit jamais être déclarée « hors périmètre » uniquement parce qu'elle se trouve dans un autre fichier.
+
+Pour les étapes frontend, exécuter également les contrôles TypeScript, lint et tests réellement configurés dans le frontend.
+
+Ne jamais déclarer une commande comme réussie si elle n'a pas été exécutée.
 
 ---
 
 # Règles de progression
 
-Avant de commencer une étape :
+## Avant une étape
 
 1. lire `.github/copilot-instructions.md` ;
 2. lire `docs/PROJECT_SPEC.md` ;
 3. lire `docs/ARCHITECTURE.md` ;
-4. lire cette roadmap ;
-5. inspecter l'état réel du repository.
+4. lire `docs/ROADMAP.md` ;
+5. lire `docs/DEVELOPMENT.md` lorsque pertinent ;
+6. inspecter l'état réel du repository.
 
-Pendant une étape :
+## Pendant une étape
 
-1. respecter strictement son périmètre ;
+1. respecter strictement le périmètre ;
 2. éviter les fonctionnalités futures ;
-3. ajouter les tests correspondants ;
-4. maintenir le typage ;
-5. documenter les décisions structurantes.
+3. faire la plus petite modification cohérente ;
+4. ajouter les tests correspondants ;
+5. maintenir la qualité du code applicatif ;
+6. documenter les décisions réellement structurantes.
 
-À la fin d'une étape :
+## À la fin d'une étape
 
-1. exécuter les quality gates applicables ;
-2. corriger les erreurs appartenant au périmètre ;
+1. exécuter les validations applicables ;
+2. corriger les régressions introduites ;
 3. mettre à jour cette roadmap ;
-4. documenter les limitations restantes ;
-5. effectuer une revue des changements ;
-6. créer un commit Git cohérent.
+4. documenter les limitations ;
+5. inspecter `git diff` ;
+6. créer un commit cohérent ;
+7. s'arrêter.
 
-Une étape suivante ne doit jamais être commencée automatiquement.
+La prochaine étape ne doit jamais être implémentée automatiquement.
 
 ---
 
 # État actuel
 
 ```text
-Étape 0  ✅ Architecture
-Étape 1  ✅ Bootstrap
-Étape 2  ✅ Infrastructure locale
-Étape 3  ✅ Persistence
-Étape 4  ✅ Fondation FastAPI
-────────────────────────────────────
-Étape 5  ⬜ Profil utilisateur       ← PROCHAINE ÉTAPE
-Étape 6  ⬜ Domaine/API offres
-Étape 7  ⬜ Collecteur fictif
-Étape 8  ⬜ Pipeline
-Étape 9  ⬜ Déduplication
-Étape 10 ⬜ Première source réelle
-Étape 11 ⬜ Matching V1
-Étape 12 ⬜ Frontend offres
-Étape 13 ⬜ Frontend profil
-Étape 14 ⬜ Interactions
-Étape 15 ⬜ Candidatures
-────────────────────────────────────
-            MVP
-────────────────────────────────────
-Étape 16 ⬜ CV
-Étape 17 ⬜ NLP
-Étape 18 ⬜ Embeddings / pgvector
-Étape 19 ⬜ Recherche sémantique
-Étape 20 ⬜ Matching hybride
-Étape 21 ⬜ Scheduler
-Étape 22 ⬜ Alertes
-Étape 23 ⬜ Stabilisation
+Étape 0   ✅ Architecture
+Étape 1   ✅ Bootstrap
+Étape 2   ✅ Infrastructure locale
+Étape 3   ✅ Persistence
+Étape 4   ✅ Fondation FastAPI
+Étape 5   ✅ Profil utilisateur
+────────────────────────────────────────
+Étape 6   ⬜ Domaine/API offres        ← PROCHAINE ÉTAPE
+Étape 7   ⬜ Collecteur fictif
+Étape 8   ⬜ Pipeline
+Étape 9   ⬜ Déduplication
+Étape 10  ⬜ Première source réelle
+Étape 11  ⬜ Matching V1
+Étape 12  ⬜ Frontend offres
+Étape 13  ⬜ Frontend profil
+Étape 14  ⬜ Interactions
+Étape 15  ⬜ Candidatures
+────────────────────────────────────────
+                 MVP
+────────────────────────────────────────
+Étape 16  ⬜ CV
+Étape 17  ⬜ NLP
+Étape 18  ⬜ Embeddings / pgvector
+Étape 19  ⬜ Recherche sémantique
+Étape 20  ⬜ Matching hybride
+Étape 21  ⬜ Scheduler
+Étape 22  ⬜ Alertes
+Étape 23  ⬜ Stabilisation
 ```
 
-**Prochaine étape autorisée : Étape 5 — Profil utilisateur et préférences.**
+**Prochaine étape autorisée : Étape 6 — Domaine et API des offres.**

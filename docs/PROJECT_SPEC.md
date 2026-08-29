@@ -1,48 +1,83 @@
 # Job Finder — Project Specification
 
-Ce document constitue la spécification de référence du projet.
+## Statut
 
-Il décrit :
-- le produit ;
-- l'architecture cible ;
-- les contraintes ;
-- la roadmap ;
-- les règles de développement.
+Ce document constitue la **spécification produit de référence** du projet Job Finder.
 
-En cas d'ambiguïté, ne pas modifier une décision structurante
-sans documenter le changement dans ARCHITECTURE.md.
+Il définit :
 
-# PROMPT MAÎTRE — Assistant personnel intelligent de recherche de stages et d'emplois
+* la vision du produit ;
+* les objectifs fonctionnels ;
+* les contraintes fondamentales ;
+* les règles métier importantes ;
+* les exigences de collecte ;
+* les exigences de matching ;
+* les exigences de confidentialité et de sécurité ;
+* les principes techniques qui ne doivent pas être remis en cause sans décision explicite.
 
-## 0. Rôle et mode de fonctionnement
+Il ne doit pas dupliquer inutilement les documents opérationnels du repository.
 
-Tu es un **architecte logiciel senior, lead developer full-stack et ingénieur Python/TypeScript**, spécialisé notamment en :
+Les sources de vérité sont réparties ainsi :
 
-* architecture logicielle ;
-* Python ;
-* FastAPI ;
-* PostgreSQL ;
-* SQLAlchemy ;
-* React ;
-* TypeScript ;
-* collecte de données et scraping responsable ;
-* data engineering ;
-* NLP ;
-* systèmes de recommandation ;
-* recherche sémantique ;
-* LLM ;
-* tests ;
-* sécurité ;
-* Docker ;
-* qualité logicielle.
+| Document                          | Responsabilité                                                |
+| --------------------------------- | ------------------------------------------------------------- |
+| `docs/PROJECT_SPEC.md`            | Ce que le produit doit faire et ses contraintes fondamentales |
+| `docs/ARCHITECTURE.md`            | Architecture réellement adoptée                               |
+| `docs/ROADMAP.md`                 | Ordre, périmètre et état des étapes                           |
+| `docs/DEVELOPMENT.md`             | Commandes et workflow de développement                        |
+| `.github/copilot-instructions.md` | Règles permanentes pour GitHub Copilot                        |
+| `docs/adr/`                       | Décisions architecturales structurantes                       |
 
-Ta mission est de m'accompagner dans la **conception puis l'implémentation progressive** d'une application web personnelle permettant de centraliser, analyser, classer et suivre des offres de stages et d'emplois.
+En cas de divergence :
 
-Tu dois agir comme un **lead developer responsable du projet**.
+1. la spécification produit reste la référence pour les besoins fonctionnels ;
+2. `ARCHITECTURE.md` représente l'architecture effectivement adoptée ;
+3. `ROADMAP.md` représente l'ordre de développement effectivement retenu ;
+4. toute modification d'une décision structurante doit être documentée.
 
-Tu ne dois pas simplement produire du code à la demande : tu dois maintenir une vision cohérente de l'architecture, signaler les choix risqués, éviter la dette technique inutile et conserver une application simple à comprendre et à faire évoluer.
+---
 
-Le projet doit privilégier, dans cet ordre :
+# 1. Vision du produit
+
+Le projet ne consiste pas à construire un simple scraper.
+
+L'objectif est de construire un **assistant personnel intelligent de recherche de stages et d'emplois** capable de répondre à la question :
+
+> Parmi toutes les offres disponibles, lesquelles sont réellement intéressantes pour moi, et pourquoi ?
+
+L'application doit progressivement permettre de :
+
+1. récupérer des offres depuis plusieurs sources autorisées ;
+2. conserver les données originales ;
+3. normaliser les offres dans un modèle commun ;
+4. détecter les doublons ;
+5. conserver la provenance de chaque offre ;
+6. structurer les informations importantes des annonces ;
+7. gérer un profil utilisateur détaillé ;
+8. gérer des préférences et contraintes ;
+9. comparer une offre au profil ;
+10. appliquer des critères éliminatoires ;
+11. calculer un score de compatibilité ;
+12. expliquer ce score ;
+13. classer les offres ;
+14. rechercher et filtrer les offres ;
+15. sauvegarder, rejeter ou archiver des offres ;
+16. suivre les candidatures ;
+17. enregistrer les interactions ;
+18. importer ultérieurement un CV ;
+19. ajouter ultérieurement des capacités NLP ;
+20. ajouter ultérieurement une recherche sémantique ;
+21. apprendre progressivement des préférences observées ;
+22. automatiser progressivement la collecte ;
+23. envoyer éventuellement des alertes.
+
+L'application est initialement destinée à un **usage personnel**.
+
+---
+
+# 2. Priorités du projet
+
+Les décisions doivent privilégier, dans cet ordre :
 
 1. fiabilité ;
 2. simplicité ;
@@ -53,144 +88,298 @@ Le projet doit privilégier, dans cet ordre :
 7. performance ;
 8. fonctionnalités avancées.
 
-**Ne complexifie jamais l'architecture sans bénéfice concret.**
+Une solution plus complexe ne doit être adoptée que si elle apporte un bénéfice concret et démontré.
+
+Principe directeur :
+
+> Construire la solution la plus simple capable de répondre correctement au besoin actuel.
 
 ---
 
-# 1. Vision du produit
+# 3. Périmètre du MVP
 
-Le but n'est pas de construire un simple scraper.
+Le MVP doit fournir une application réellement utilisable **sans nécessiter de LLM, d'embeddings ou de machine learning**.
 
-Le produit final doit devenir un **assistant personnel intelligent de recherche d'emploi** capable de répondre principalement à la question :
+## Inclus dans le MVP
 
-> Parmi toutes les offres disponibles, lesquelles sont réellement intéressantes pour moi, et pourquoi ?
+Le MVP doit permettre :
 
-L'application doit permettre de :
+* de renseigner un profil utilisateur ;
+* de définir des préférences ;
+* de collecter au moins une source réelle autorisée ;
+* de conserver les données brutes ;
+* de normaliser les offres ;
+* de détecter les doublons ;
+* de conserver plusieurs occurrences d'une même offre ;
+* de calculer un matching déterministe ;
+* d'expliquer le score ;
+* de consulter les offres dans une interface ;
+* de rechercher et filtrer ;
+* de mettre une offre en favori ;
+* de rejeter une offre ;
+* d'archiver une offre ;
+* de suivre une candidature ;
+* de lancer l'application localement avec PostgreSQL ;
+* de disposer de tests et d'une documentation suffisante.
 
-1. récupérer des offres depuis plusieurs sources autorisées ;
-2. conserver les données originales ;
-3. normaliser les offres dans un modèle commun ;
-4. détecter les doublons provenant d'une ou plusieurs sources ;
-5. enrichir les annonces avec des données structurées ;
-6. renseigner un profil utilisateur détaillé ;
-7. éventuellement importer et analyser un CV ;
-8. comparer les offres au profil ;
-9. appliquer des critères éliminatoires ;
-10. calculer un score de compatibilité explicable ;
-11. classer les offres par pertinence ;
-12. rechercher et filtrer les offres ;
-13. sauvegarder ou rejeter certaines offres ;
-14. enregistrer les interactions ;
-15. suivre les candidatures ;
-16. apprendre progressivement des préférences observées ;
-17. proposer éventuellement des ajustements de préférences ;
-18. effectuer plus tard de la recherche sémantique ;
-19. automatiser progressivement la collecte ;
-20. envoyer éventuellement des alertes pertinentes.
+## Hors MVP
 
-L'application est initialement destinée à un **usage personnel**.
+Ne sont pas nécessaires pour valider le MVP :
 
-Elle doit néanmoins être conçue proprement afin de pouvoir évoluer.
+* LLM ;
+* embeddings ;
+* pgvector ;
+* recherche sémantique ;
+* machine learning ;
+* analyse automatique de CV ;
+* personnalisation comportementale avancée ;
+* Redis ;
+* Celery ;
+* architecture distribuée ;
+* microservices ;
+* alertes automatisées ;
+* mobile ;
+* extension navigateur ;
+* génération automatique de CV ;
+* génération automatique de lettres de motivation.
+
+La frontière détaillée et l'ordre exact des étapes sont définis dans :
+
+`docs/ROADMAP.md`
 
 ---
 
-# 2. Principe architectural fondamental
+# 4. Architecture générale imposée
 
-Construis initialement un **monolithe modulaire**, et non une architecture microservices.
+Le projet doit commencer et rester, pour le MVP, un **monolithe modulaire**.
 
-Le système doit être clairement découpé en domaines internes, mais rester simple à exécuter, tester et déployer.
+Il doit comprendre principalement :
 
-Architecture générale cible :
+* un backend Python / FastAPI ;
+* PostgreSQL ;
+* SQLAlchemy 2 ;
+* Alembic ;
+* Pydantic v2 ;
+* un frontend React + TypeScript + Vite.
+
+L'architecture détaillée effectivement retenue est documentée dans :
+
+`docs/ARCHITECTURE.md`
+
+Ne pas introduire sans besoin concret :
+
+* microservices ;
+* Redis ;
+* Celery ;
+* Kafka ;
+* Elasticsearch ;
+* MongoDB ;
+* Kubernetes ;
+* base vectorielle externe.
+
+PostgreSQL doit rester la source de vérité principale.
+
+---
+
+# 5. Organisation actuelle du repository
+
+L'organisation générale actuelle est :
 
 ```text
-                         ┌─────────────────────┐
-                         │      Frontend       │
-                         │ React + TypeScript  │
-                         └──────────┬──────────┘
-                                    │
-                                  REST
-                                    │
-                         ┌──────────▼──────────┐
-                         │       FastAPI       │
-                         │   Backend Python    │
-                         └──────────┬──────────┘
-                                    │
-              ┌─────────────────────┼─────────────────────┐
-              │                     │                     │
-              ▼                     ▼                     ▼
-        Profile domain        Job domain            Applications
-              │                     │                     │
-              └─────────────────────┼─────────────────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │      Services       │
-                         │                     │
-                         │ collection          │
-                         │ normalization       │
-                         │ deduplication       │
-                         │ enrichment / NLP    │
-                         │ matching            │
-                         │ recommendation      │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │     PostgreSQL      │
-                         │ + pgvector plus tard│
-                         └─────────────────────┘
+/
+├── pyproject.toml
+├── uv.lock
+├── docker-compose.yml
+│
+├── src/
+│   ├── backend/
+│   │   ├── app/
+│   │   └── tests/
+│   │
+│   └── frontend/
+│
+├── docs/
+└── .github/
 ```
 
-Pipeline principal :
+Les chemins détaillés et leur rôle sont documentés dans :
+
+* `docs/ARCHITECTURE.md`
+* `docs/DEVELOPMENT.md`
+
+Ne pas recréer les anciens dossiers racine :
 
 ```text
-Sources externes
-      │
-      ▼
-Collecte
-      │
-      ▼
-RawJobSnapshot
-      │
-      ▼
-Parsing
-      │
-      ▼
-Normalisation
-      │
-      ▼
-JobOffer canonique
-      │
-      ▼
-Déduplication
-      │
-      ▼
-Enrichissement
-      │
-      ▼
-Matching
-      │
-      ▼
-Score + explications
-      │
-      ▼
-API
-      │
-      ▼
-Frontend
+backend/
+frontend/
 ```
 
-Les différentes étapes doivent être **découplées**.
+Le backend se trouve sous :
 
-Une modification du moteur de matching ne doit par exemple pas nécessiter de modifier les scrapers.
+```text
+src/backend/
+```
+
+Le frontend se trouve sous :
+
+```text
+src/frontend/
+```
 
 ---
 
-# 3. Stack technique de référence
+# 6. Toolchain Python
 
-## Backend
+Le projet Python utilise obligatoirement les outils Astral suivants :
 
-Utiliser :
+* `uv`
+* Ruff
+* ty
+
+ainsi que :
+
+* pytest.
+
+Les fichiers du projet Python sont situés à la racine :
+
+```text
+pyproject.toml
+uv.lock
+```
+
+---
+
+# 7. uv
+
+`uv` est le gestionnaire principal pour :
+
+* le projet Python ;
+* les dépendances ;
+* l'environnement ;
+* le lockfile ;
+* l'exécution des outils Python.
+
+Ne pas créer un second workflow basé sur :
+
+```text
+requirements.txt
+pip install -r ...
+```
+
+sans décision explicite.
+
+Les dépendances Python doivent être ajoutées avec `uv`.
+
+Exemple :
+
+```bash
+uv add <dependency>
+```
+
+`uv.lock` doit être versionné.
+
+Ne jamais modifier `uv.lock` manuellement.
+
+---
+
+# 8. Ruff
+
+Ruff est responsable :
+
+* du linting ;
+* du formatage ;
+
+du **code applicatif backend**.
+
+Le périmètre principal est :
+
+```text
+src/backend/app/
+```
+
+Les tests backend sont volontairement exclus de Ruff.
+
+Cette décision est intentionnelle : les tests doivent prioritairement être jugés sur leur comportement et non sur le coût de maintenance du linting de mocks, fixtures ou helpers de tests.
+
+---
+
+# 9. ty
+
+ty est le vérificateur statique de types du **code applicatif backend**.
+
+Le périmètre principal est :
+
+```text
+src/backend/app/
+```
+
+Les tests backend :
+
+```text
+src/backend/tests/
+```
+
+sont volontairement exclus de ty.
+
+Le code applicatif doit rester correctement typé.
+
+Éviter :
+
+* les `Any` inutiles ;
+* les suppressions globales d'erreurs ;
+* les annotations imprécises sans justification.
+
+---
+
+# 10. pytest
+
+pytest est responsable de la validation des tests backend.
+
+Les tests sont situés dans :
+
+```text
+src/backend/tests/
+```
+
+Ils doivent principalement vérifier :
+
+* comportement ;
+* régressions ;
+* intégrité des données ;
+* contrats API ;
+* règles métier ;
+* fonctionnement des pipelines.
+
+---
+
+# 11. Quality gate backend
+
+Le quality gate est exécuté depuis la racine du repository :
+
+```bash
+uv lock --check
+uv run ruff check .
+uv run ruff format --check .
+uv run ty check
+uv run pytest src/backend/tests
+```
+
+Répartition :
+
+```text
+src/backend/app/     → Ruff + Ruff format + ty
+src/backend/tests/   → pytest
+```
+
+Une nouvelle étape ne doit pas introduire de nouvelles erreurs dans ces contrôles.
+
+Les erreurs réellement préexistantes et indépendantes doivent être identifiées comme telles et documentées.
+
+---
+
+# 12. Backend
+
+Le backend utilise :
 
 * Python ;
 * FastAPI ;
@@ -198,216 +387,61 @@ Utiliser :
 * Pydantic Settings ;
 * SQLAlchemy 2 ;
 * Alembic ;
-* PostgreSQL ;
-* HTTPX pour HTTP lorsque pertinent ;
-* BeautifulSoup pour le parsing HTML simple lorsque pertinent ;
-* Playwright uniquement lorsque réellement nécessaire.
+* PostgreSQL.
 
-Utiliser une version moderne de Python prise en charge par l'ensemble des dépendances du projet.
+HTTPX est privilégié pour les appels HTTP lorsque pertinent.
 
-La version retenue doit être :
+BeautifulSoup peut être utilisé pour du parsing HTML simple.
 
-* explicitement configurée ;
-* documentée ;
-* cohérente en local, CI et Docker.
-
-Éviter de dépendre inutilement de fonctionnalités expérimentales du langage.
+Playwright ne doit être utilisé que lorsqu'une solution HTTP classique est insuffisante et lorsque l'automatisation est appropriée.
 
 ---
 
-# 4. Toolchain Python Astral obligatoire
+# 13. Architecture backend
 
-Le projet Python doit utiliser les trois outils Astral suivants :
+La séparation doit rester pragmatique.
 
-* `uv`
-* `ruff`
-* `ty`
-
-Ils font partie intégrante de la chaîne de développement et ne sont pas optionnels.
-
-## 4.1 uv — gestion du projet Python
-
-Utiliser **uv comme gestionnaire principal de projet, de dépendances et d'environnement Python**.
-
-Ne pas construire le workflow autour de :
+Architecture conceptuelle :
 
 ```text
-pip install -r requirements.txt
+API
+ ↓
+Application / Services
+ ↓
+Domain / Business rules
+ ↓
+Persistence / External adapters
 ```
 
-Le projet backend doit utiliser principalement :
+Les routes FastAPI doivent rester légères.
 
-```text
-pyproject.toml
-uv.lock
-```
+Éviter :
 
-`uv.lock` doit être versionné dans Git.
+* logique métier complexe dans les routes ;
+* SQL dispersé dans les endpoints ;
+* dépendances FastAPI dans le cœur métier ;
+* architecture Clean/Hexagonale excessivement cérémonielle ;
+* multiplication de couches sans valeur réelle.
 
-Les commandes usuelles doivent être basées sur :
-
-```bash
-uv sync
-uv add <dependency>
-uv add --dev <dependency>
-uv remove <dependency>
-uv run <command>
-uv lock
-uv lock --check
-```
-
-Les tests doivent par exemple être exécutés via :
-
-```bash
-uv run pytest
-```
-
-Lorsque des groupes de dépendances sont pertinents, séparer au minimum :
-
-* dépendances runtime ;
-* dépendances de développement/test.
-
-L'environnement `.venv` peut être géré automatiquement par uv.
-
-Toutes les instructions d'installation et de développement Python doivent utiliser uv.
-
-Ne génère pas parallèlement plusieurs mécanismes concurrents de gestion de dépendances sans raison.
+Un service ou repository doit exister uniquement s'il clarifie réellement une responsabilité.
 
 ---
 
-# 4.2 Ruff — linting et formatage
+# 14. Frontend
 
-Utiliser **Ruff pour le linting et le formatage du code Python**.
-
-Configurer Ruff dans :
-
-```text
-pyproject.toml
-```
-
-Les commandes minimales de validation doivent inclure :
-
-```bash
-uv run ruff check .
-uv run ruff format --check .
-```
-
-Pour corriger localement :
-
-```bash
-uv run ruff check --fix .
-uv run ruff format .
-```
-
-Configurer raisonnablement Ruff pour couvrir notamment :
-
-* erreurs Python ;
-* imports ;
-* code mort évident ;
-* conventions importantes ;
-* modernisation de syntaxe lorsque pertinente ;
-* qualité générale.
-
-Ne pas activer aveuglément toutes les règles Ruff.
-
-Chaque règle supplémentaire doit être cohérente avec le projet.
-
-Ruff doit remplacer les outils redondants lorsqu'il couvre correctement leur fonction.
-
-Éviter par exemple d'ajouter simultanément Black, isort et Flake8 sans justification.
-
----
-
-# 4.3 ty — vérification statique des types
-
-Utiliser **ty comme vérificateur statique des types Python**.
-
-Le code backend doit être correctement typé.
-
-Commande de référence :
-
-```bash
-uv run ty check
-```
-
-Les annotations doivent être particulièrement rigoureuses sur :
-
-* services ;
-* modèles de domaine ;
-* fonctions de normalisation ;
-* interfaces des collecteurs ;
-* moteur de matching ;
-* configuration ;
-* repositories ;
-* fonctions publiques.
-
-Éviter les `Any` inutiles.
-
-Ne pas masquer massivement les erreurs de typage.
-
-Si une bibliothèque tierce génère un problème légitime de typage :
-
-1. déterminer la cause ;
-2. limiter la suppression au périmètre nécessaire ;
-3. documenter brièvement la raison.
-
-Ne remplace pas silencieusement `ty` par mypy ou Pyright.
-
----
-
-# 4.4 Quality gate Python obligatoire
-
-Avant de considérer une étape backend comme terminée, les commandes suivantes doivent réussir :
-
-```bash
-uv lock --check
-uv run ruff check .
-uv run ruff format --check .
-uv run ty check
-uv run pytest
-```
-
-Une fonctionnalité n'est pas terminée si elle casse l'un de ces contrôles.
-
----
-
-# 5. Frontend
-
-Utiliser :
+Le frontend utilise :
 
 * React ;
 * TypeScript ;
 * Vite.
 
-Ne pas utiliser Next.js sauf si un besoin concret apparaît ultérieurement.
+TypeScript doit rester en mode strict.
 
-Une application personnelle de type dashboard ne nécessite pas initialement :
+Ne pas introduire Next.js sans besoin réel.
 
-* SSR ;
-* SEO complexe ;
-* routing serveur avancé.
+Le frontend doit progressivement être organisé par fonctionnalités.
 
-Préférer donc React + Vite pour le MVP.
-
-Organisation recommandée :
-
-```text
-frontend/src/
-├── api/
-├── components/
-├── features/
-├── hooks/
-├── layouts/
-├── pages/
-├── routes/
-├── types/
-├── utils/
-└── main.tsx
-```
-
-Découper préférentiellement le frontend par fonctionnalités.
-
-Exemple :
+Exemples :
 
 ```text
 features/
@@ -417,52 +451,42 @@ features/
 └── recommendations/
 ```
 
-Utiliser une bibliothèque dédiée aux requêtes serveur telle que **TanStack Query** si pertinente.
+Ne pas introduire un gestionnaire d'état global lourd sans besoin concret.
 
-Ne pas ajouter de gestionnaire d'état global lourd avant d'en avoir besoin.
-
-Utiliser TypeScript en mode strict.
+Une bibliothèque spécialisée pour les données serveur, telle que TanStack Query, peut être utilisée lorsqu'elle apporte une valeur claire.
 
 ---
 
-# 6. Base de données
+# 15. PostgreSQL
 
-Utiliser PostgreSQL comme **source de vérité principale**.
+PostgreSQL est la source de vérité du système.
 
-Ne pas ajouter immédiatement :
+Il doit stocker notamment :
 
-* Elasticsearch ;
-* MongoDB ;
-* Redis ;
-* une base vectorielle séparée.
+* offres ;
+* occurrences sources ;
+* snapshots bruts ;
+* profil ;
+* préférences ;
+* interactions ;
+* candidatures ;
+* résultats de matching lorsque pertinent.
 
-Lorsque la recherche sémantique sera ajoutée, privilégier d'abord :
+Ne pas ajouter une nouvelle base uniquement parce qu'une fonctionnalité pourrait éventuellement en bénéficier.
+
+Pour la recherche sémantique future, privilégier d'abord :
 
 ```text
 PostgreSQL + pgvector
 ```
 
-afin de conserver une infrastructure simple.
-
-Redis ne devra être ajouté que si un besoin concret apparaît, par exemple :
-
-* file de tâches ;
-* cache réellement utile ;
-* coordination de workers.
-
 ---
 
-# 7. Modèle de domaine initial
+# 16. Modèle JobSource
 
-Évite de stocker absolument toutes les informations dans une seule table géante.
+Une source représente un fournisseur d'offres.
 
-Le modèle initial doit distinguer au minimum les concepts suivants.
-
-## JobSource
-
-Représente une source.
-
-Exemples de données :
+Informations conceptuelles possibles :
 
 ```text
 id
@@ -475,11 +499,15 @@ last_checked_at
 metadata
 ```
 
+La modélisation réellement implémentée peut évoluer par migration.
+
 ---
 
-## RawJobSnapshot
+# 17. RawJobSnapshot
 
-Conserve ce qui a réellement été récupéré.
+Les données récupérées doivent être conservées autant que possible avant transformation.
+
+Conceptuellement :
 
 ```text
 id
@@ -487,26 +515,22 @@ source_id
 external_job_id
 source_url
 payload
-raw_html éventuel
+raw_html
 content_hash
 collected_at
 ```
 
-Les données brutes doivent permettre de réexécuter ultérieurement :
+Objectif :
 
-* parsing ;
-* normalisation ;
-* extraction NLP ;
-
-sans devoir systématiquement recontacter le site source.
+> pouvoir rejouer parsing, normalisation ou enrichissement sans devoir systématiquement recontacter la source.
 
 ---
 
-## JobOffer
+# 18. JobOffer
 
-Représentation canonique d'une offre.
+`JobOffer` représente une offre canonique.
 
-Prévoir notamment :
+Champs potentiels :
 
 ```text
 id
@@ -552,17 +576,19 @@ created_at
 updated_at
 ```
 
-Les compétences, technologies et langues pourront être normalisées progressivement dans des tables associées plutôt que stockées uniquement dans des chaînes de caractères.
+Le modèle doit rester évolutif.
+
+Ne pas ajouter toutes les données futures dans une seule table uniquement pour anticiper des fonctionnalités non développées.
 
 ---
 
-## JobOccurrence / JobSourceRecord
+# 19. Provenance des offres
 
-Une même offre canonique peut apparaître sur plusieurs sources.
+Une même offre peut apparaître sur plusieurs sources.
 
-Ne supprime donc pas physiquement toutes les copies lorsqu'un doublon est découvert.
+Le système doit conserver les différentes occurrences.
 
-Utiliser plutôt une relation conceptuelle du type :
+Modèle conceptuel :
 
 ```text
 JobOffer
@@ -572,62 +598,57 @@ JobOffer
    └── occurrence source C
 ```
 
-Cela permet de conserver :
-
-* provenance ;
-* URLs originales ;
-* dates de collecte ;
-* différences éventuelles ;
-* traçabilité de la déduplication.
-
----
-
-## UserProfile
-
-Prévoir notamment :
+Une occurrence peut conserver notamment :
 
 ```text
-education
-degrees
-experiences
-
-skills
-skill_levels
-
-technologies
-technology_levels
-
-languages
-language_levels
-
-preferred_locations
-mobility_radius
-remote_preference
-
-contract_types
-job_types
-
-industries
-
-preferred_roles
-excluded_roles
-
-salary_expectations
-
-availability_date
-internship_duration
-
-preferred_companies
-excluded_companies
+source
+external_job_id
+source_url
+raw_snapshot
+collected_at
 ```
 
-Les données essentielles doivent être modifiables depuis l'interface.
+La provenance ne doit pas être perdue lors de la déduplication.
 
 ---
 
-## UserPreference
+# 20. Profil utilisateur
 
-Les préférences doivent pouvoir avoir plusieurs niveaux :
+Le profil utilisateur constitue la source structurée utilisée par le matching.
+
+Il doit progressivement permettre de représenter :
+
+* formation ;
+* diplômes ;
+* expériences ;
+* compétences ;
+* technologies ;
+* langues ;
+* localisation ;
+* mobilité ;
+* préférence remote ;
+* types de contrat ;
+* types de poste ;
+* industries ;
+* rôles recherchés ;
+* rôles exclus ;
+* salaire souhaité ;
+* disponibilité ;
+* durée de stage ;
+* entreprises préférées ;
+* entreprises exclues.
+
+L'application est initialement mono-utilisateur.
+
+Il n'est pas nécessaire de créer un système complet de comptes utilisateurs pour le MVP.
+
+---
+
+# 21. Préférences
+
+Les préférences doivent pouvoir représenter différents degrés d'importance.
+
+Valeurs conceptuelles :
 
 ```text
 REQUIRED
@@ -638,249 +659,124 @@ AVOID
 EXCLUDED
 ```
 
-Ne mélange pas :
+Le système doit distinguer :
 
-* préférences ;
-* critères obligatoires ;
-* critères éliminatoires.
+* une préférence ;
+* un critère obligatoire ;
+* une exclusion.
+
+Exemple :
+
+```text
+Python → VERY_IMPORTANT
+Stage → REQUIRED
+Commercial → EXCLUDED
+```
+
+Le moteur de matching doit pouvoir exploiter ultérieurement ces différences.
 
 ---
 
-## Interaction
+# 22. CV
 
-Enregistrer les actions telles que :
+L'import de CV est une fonctionnalité post-MVP.
+
+Formats prévus :
+
+* PDF ;
+* DOCX.
+
+Informations potentiellement extraites :
+
+* expériences ;
+* formations ;
+* compétences ;
+* technologies ;
+* langues ;
+* projets ;
+* certifications ;
+* intitulés de postes.
+
+Pipeline conceptuel :
 
 ```text
-view
-favorite
-reject
-apply
-archive
+CV
+ ↓
+extraction texte
+ ↓
+extraction structurée
+ ↓
+proposition de données
+ ↓
+validation utilisateur
+ ↓
+profil
 ```
 
-avec notamment :
+Le CV ne doit jamais écraser automatiquement le profil utilisateur.
 
-```text
-job_offer_id
-interaction_type
-created_at
-```
+Toute donnée extraite doit pouvoir être :
+
+* vérifiée ;
+* modifiée ;
+* rejetée.
 
 ---
 
-## MatchResult
+# 23. Architecture de collecte
 
-Le résultat du matching doit être persistant ou reproductible.
+Les sources doivent respecter une abstraction commune.
 
-Prévoir conceptuellement :
+Le collecteur doit essentiellement transformer :
 
 ```text
-job_offer_id
-profile_id
-
-score
-eligible
-
-scoring_version
-
-component_scores
-matched_items
-missing_items
-blocking_reasons
-explanation_data
-
-computed_at
+source externe
+      ↓
+données brutes identifiées
 ```
 
-Il est essentiel de conserver une **version du moteur de scoring**.
+et non exécuter toute la logique métier.
+
+Pipeline global :
+
+```text
+Source
+  ↓
+Collecte
+  ↓
+RawJobSnapshot
+  ↓
+Parsing
+  ↓
+Normalisation
+  ↓
+JobOfferCandidate
+  ↓
+Déduplication
+  ↓
+JobOffer canonique
+  ↓
+Matching
+```
+
+Les composants doivent rester séparables et testables.
 
 ---
 
-## Application
+# 24. Politique concernant les sources
 
-Suivi des candidatures :
-
-```text
-job_offer_id
-company
-position
-status
-
-application_date
-follow_up_date
-
-cv_reference
-cover_letter_reference
-
-notes
-contacts
-next_action
-
-created_at
-updated_at
-```
-
-Statuts possibles :
-
-```text
-TO_REVIEW
-FAVORITE
-TO_PREPARE
-APPLIED
-INTERVIEW
-TECHNICAL_TEST
-OFFER_RECEIVED
-REJECTED
-WITHDRAWN
-ARCHIVED
-```
-
----
-
-# 8. Architecture backend
-
-Utiliser une séparation pragmatique entre :
-
-```text
-API
-Application / Services
-Domain
-Infrastructure
-```
-
-Ne pas appliquer une Clean Architecture excessivement cérémonielle.
-
-Objectif : garder la logique métier indépendante des routes FastAPI et des détails de scraping.
-
-Structure indicative :
-
-```text
-job-finder/
-│
-├── backend/
-│   ├── pyproject.toml
-│   ├── uv.lock
-│   ├── alembic.ini
-│   │
-│   ├── app/
-│   │   ├── main.py
-│   │   │
-│   │   ├── api/
-│   │   │   ├── dependencies/
-│   │   │   └── routes/
-│   │   │
-│   │   ├── core/
-│   │   │   ├── config.py
-│   │   │   ├── logging.py
-│   │   │   └── exceptions.py
-│   │   │
-│   │   ├── db/
-│   │   │   ├── models/
-│   │   │   ├── repositories/
-│   │   │   ├── session.py
-│   │   │   └── migrations/
-│   │   │
-│   │   ├── jobs/
-│   │   │   ├── schemas/
-│   │   │   ├── services/
-│   │   │   └── domain/
-│   │   │
-│   │   ├── profile/
-│   │   ├── applications/
-│   │   ├── interactions/
-│   │   │
-│   │   ├── collection/
-│   │   │   ├── sources/
-│   │   │   ├── parsers/
-│   │   │   └── services/
-│   │   │
-│   │   ├── normalization/
-│   │   ├── deduplication/
-│   │   ├── matching/
-│   │   ├── enrichment/
-│   │   └── ai/
-│   │
-│   └── tests/
-│       ├── unit/
-│       ├── integration/
-│       └── fixtures/
-│
-├── frontend/
-│   ├── src/
-│   └── tests/
-│
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── DEVELOPMENT.md
-│   └── adr/
-│
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
-└── README.md
-```
-
-Tu peux améliorer cette structure si tu proposes quelque chose de plus cohérent.
-
-Explique les changements importants avant de les effectuer.
-
----
-
-# 9. Architecture de collecte
-
-Les sources doivent utiliser une interface commune.
-
-Ne mets cependant pas la logique de normalisation globale dans chaque scraper.
-
-Le collecteur doit principalement transformer une source externe en **données brutes clairement identifiées**.
-
-Interface conceptuelle :
-
-```text
-JobSource
-├── source_name
-├── collect()
-├── fetch_listing()
-├── fetch_details()
-└── parse_raw_job()
-```
-
-Le résultat doit ressembler conceptuellement à :
-
-```text
-RawJob
-```
-
-Puis un composant distinct assure :
-
-```text
-RawJob
-   ↓
-Normalizer
-   ↓
-NormalizedJob
-```
-
-Cela évite que chaque collecteur réimplémente toutes les règles métier.
-
-Chaque source doit pouvoir être ajoutée sans modifier le cœur du système.
-
----
-
-# 10. Politique obligatoire concernant les sources
-
-Avant d'implémenter un collecteur réel :
+Avant d'implémenter une source réelle :
 
 1. rechercher une API officielle ;
-2. rechercher un flux RSS/XML ou une autre interface publique prévue pour l'automatisation ;
-3. consulter les conditions applicables ;
+2. rechercher un flux RSS/XML/JSON ;
+3. vérifier les conditions applicables ;
 4. examiner `robots.txt` lorsque pertinent ;
-5. déterminer les restrictions d'accès ;
-6. vérifier la nécessité éventuelle d'une authentification ;
+5. vérifier les restrictions d'accès ;
+6. vérifier la nécessité d'une authentification ;
 7. déterminer une fréquence raisonnable ;
-8. documenter la méthode choisie.
+8. documenter la stratégie retenue.
 
-Pour chaque source, créer une fiche :
+Pour chaque source réelle, documenter au minimum :
 
 ```text
 Source:
@@ -898,6 +794,10 @@ Date de dernière vérification:
 Remarques:
 ```
 
+---
+
+# 25. Interdictions concernant la collecte
+
 Ne jamais contourner :
 
 * CAPTCHA ;
@@ -905,63 +805,69 @@ Ne jamais contourner :
 * paywalls ;
 * protections anti-bot ;
 * rate limits ;
-* restrictions destinées à empêcher l'accès automatisé.
+* restrictions techniques destinées à empêcher l'automatisation.
 
-Ne propose aucune technique visant à masquer l'automatisation ou contourner une protection.
+Ne pas proposer de mécanisme visant à :
 
-Si une source ne peut raisonnablement pas être collectée automatiquement, proposer :
+* masquer volontairement un bot ;
+* contourner une protection ;
+* contourner une restriction d'accès.
+
+Si une source n'est pas raisonnablement automatisable, proposer :
 
 * API ;
-* RSS ;
+* feed ;
 * export ;
 * import manuel ;
 * autre source.
 
 ---
 
-# 11. Choix de méthode de collecte
+# 26. Méthode de collecte
 
-Toujours choisir la solution la plus simple disponible.
+Toujours choisir la méthode la plus simple appropriée.
 
 Ordre de préférence :
 
 ```text
 API officielle
-   ↓
-Feed / flux structuré
-   ↓
-requête HTTP + parsing HTML
-   ↓
-outil spécialisé de crawling
-   ↓
+     ↓
+feed structuré
+     ↓
+HTTP + parsing
+     ↓
+crawler spécialisé
+     ↓
 navigateur automatisé
 ```
 
-Ne pas utiliser Playwright lorsqu'une simple requête HTTP suffit.
+Ne pas utiliser Playwright par défaut.
 
-Chaque collecteur doit gérer :
+Un collecteur doit gérer raisonnablement :
 
-* timeout ;
+* timeouts ;
 * erreurs réseau ;
 * réponses invalides ;
-* changement inattendu de structure ;
 * rate limiting ;
-* retries raisonnés ;
-* logs ;
-* erreurs partielles.
+* retries ;
+* changements de structure ;
+* erreurs partielles ;
+* logging.
 
-L'échec d'une source ne doit jamais provoquer l'échec de toutes les autres.
+La panne d'une source ne doit pas provoquer l'échec de tout le système.
 
 ---
 
-# 12. Normalisation
+# 27. Normalisation
 
-Créer un pipeline explicite :
+Les différentes sources doivent produire un modèle commun.
+
+Pipeline :
 
 ```text
 RawJob
    ↓
-validation minimale
+validation
    ↓
 parsing
    ↓
@@ -970,77 +876,80 @@ normalisation
 JobOfferCandidate
 ```
 
-Normaliser notamment :
+Normaliser progressivement :
 
 * titres ;
 * entreprises ;
 * URLs ;
 * pays ;
 * villes ;
-* types de contrat ;
+* contrat ;
 * remote/hybrid/on-site ;
 * monnaies ;
+* salaires ;
 * dates ;
 * technologies ;
 * compétences ;
 * niveaux d'expérience.
 
-Ne jamais perdre l'information originale lorsque la normalisation est incertaine.
+Ne pas perdre inutilement les valeurs originales.
 
-Conserver simultanément :
+Lorsque nécessaire, conserver simultanément :
 
 ```text
 raw value
 normalized value
 ```
 
-lorsque cela est utile.
-
 ---
 
-# 13. Déduplication
+# 28. Déduplication
 
-La déduplication doit être **progressive, explicable et conservatrice**.
+La déduplication doit être :
 
-Ne jamais supprimer automatiquement une offre simplement parce qu'une similarité approximative est élevée.
+* progressive ;
+* explicable ;
+* conservatrice ;
+* non destructive.
 
-Utiliser plusieurs niveaux.
-
-## Niveau 1 — identifiants forts
+## Niveau 1 — Identifiants forts
 
 Exemples :
 
 ```text
 source + external_job_id
 canonical URL
-content hash exact
+content hash
 ```
 
-## Niveau 2 — fingerprint déterministe
+## Niveau 2 — Fingerprint
 
-Combiner des valeurs normalisées :
+Exemple :
 
 ```text
 company
++
 title
++
 location
++
 contract
 ```
 
-## Niveau 3 — similarité floue
+## Niveau 3 — Similarité floue
 
-Utiliser éventuellement :
+Lorsque nécessaire :
 
-* similarité de titres ;
-* similarité de descriptions ;
-* proximité des dates ;
-* proximité des localisations.
+* titres ;
+* descriptions ;
+* dates ;
+* localisations.
 
-## Niveau 4 — similarité sémantique
+## Niveau 4 — Similarité sémantique
 
-Uniquement pour les cas ambigus et lorsque la couche sémantique existe.
+Uniquement plus tard, si les étapes précédentes sont insuffisantes.
 
-Le résultat peut être :
+Résultats possibles :
 
 ```text
 NOT_DUPLICATE
@@ -1048,19 +957,19 @@ POSSIBLE_DUPLICATE
 CONFIRMED_DUPLICATE
 ```
 
-Les doublons confirmés doivent être **rattachés à une offre canonique**, pas simplement détruits.
+Un doublon confirmé doit être relié à une offre canonique.
 
-Conserver les éléments ayant justifié la décision.
+Il ne doit pas être simplement supprimé.
 
 ---
 
-# 14. Moteur de matching V1
+# 29. Matching V1
 
-Commencer par un moteur **entièrement déterministe**.
+Le premier moteur doit être **entièrement déterministe**.
 
 Ne pas commencer par un LLM.
 
-Le moteur doit calculer plusieurs composantes, par exemple :
+Composantes possibles :
 
 ```text
 skills
@@ -1077,22 +986,20 @@ duration
 role
 ```
 
-Score conceptuel :
+Calcul conceptuel :
 
 ```text
 final_score =
-    Σ(component_score × component_weight)
+    somme(component_score × component_weight)
 ```
 
-Les poids doivent être configurables.
-
-Proposer une pondération initiale cohérente mais ne pas la considérer comme définitive.
+Les pondérations doivent être configurables.
 
 ---
 
-# 15. Critères éliminatoires
+# 30. Critères éliminatoires
 
-Certains critères doivent être distincts du score.
+Les contraintes bloquantes sont distinctes du score.
 
 Exemple :
 
@@ -1107,25 +1014,23 @@ Résultat :
 eligible = false
 ```
 
-Les critères éliminatoires pourront concerner :
+Critères possibles :
 
-* type de contrat ;
+* contrat ;
 * localisation ;
 * mobilité ;
 * durée ;
 * disponibilité ;
-* formation ;
+* diplôme ;
 * compétence obligatoire ;
 * langue obligatoire ;
-* type de poste.
-
-Ils doivent être configurables.
+* rôle exclu.
 
 ---
 
-# 16. Gestion de l'incertitude
+# 31. Gestion de l'incertitude
 
-Différencie explicitement :
+Le moteur doit distinguer :
 
 ```text
 MATCH
@@ -1133,34 +1038,35 @@ MISMATCH
 UNKNOWN
 ```
 
-Une donnée absente dans une annonce ne doit pas automatiquement être considérée comme incompatible.
+Une information absente n'est pas une incompatibilité.
 
 Exemple :
 
 ```text
-salaire souhaité : 1500 €
-salaire de l'offre : non indiqué
+Profil :
+salaire souhaité = 1500 €
+
+Offre :
+salaire absent
 ```
 
-ne signifie pas :
+Résultat :
 
 ```text
-salary_match = 0
+UNKNOWN
 ```
 
-mais plutôt :
+et non :
 
 ```text
-salary_match = unknown
+MISMATCH
 ```
-
-Le scoring doit éviter de pénaliser abusivement les offres dont certaines informations ne sont simplement pas disponibles.
 
 ---
 
-# 17. Explication du matching
+# 32. Explicabilité
 
-Le score doit toujours être explicable.
+Le score doit être explicable.
 
 Exemple :
 
@@ -1175,32 +1081,25 @@ Points forts
 ✓ Python
 ✓ SQL
 ✓ Machine Learning
-✓ NLP
-✓ Paris
 
 Points faibles
 ⚠ AWS demandé mais absent du profil
-⚠ Expérience souhaitée supérieure au profil
 
 Informations inconnues
 ? Salaire non indiqué
-
-Pourquoi cette offre est recommandée
-Le poste correspond très fortement aux compétences techniques
-et au type de stage recherché.
 ```
 
-L'explication déterministe doit provenir des composantes ayant réellement produit le score.
+L'explication doit provenir des éléments réellement utilisés par le moteur.
 
-Ne demande pas à un LLM d'inventer a posteriori une justification sans lui fournir les données de calcul.
+Un LLM ne doit pas inventer une justification indépendante du calcul.
 
 ---
 
-# 18. Versionnement du scoring
+# 33. Versionnement du matching
 
-Le moteur doit avoir une version identifiable.
+Chaque version du moteur doit être identifiable.
 
-Exemple :
+Exemples :
 
 ```text
 deterministic-v1
@@ -1208,160 +1107,134 @@ deterministic-v2
 hybrid-v1
 ```
 
-Conserver cette version avec les résultats.
-
-Cela doit permettre de :
-
-* recalculer les scores ;
-* comparer deux méthodes ;
-* comprendre pourquoi un classement a changé.
-
----
-
-# 19. IA / NLP
-
-La couche IA vient **après le MVP déterministe**.
-
-Utiliser d'abord des méthodes classiques lorsque suffisantes.
-
-Architecture conceptuelle :
-
-```text
-JobOffer
-   │
-   ├── extraction déterministe
-   │
-   ├── extraction NLP locale
-   │
-   ├── embeddings
-   │
-   └── LLM éventuel
-   │
-   ▼
-StructuredEnrichment
-```
+Le résultat doit pouvoir conserver la version utilisée.
 
 Objectifs :
 
-* identifier les compétences ;
-* identifier les technologies ;
-* identifier les missions ;
-* détecter le niveau demandé ;
-* détecter les langues ;
-* détecter les éléments implicites ;
-* produire une représentation sémantique.
+* reproductibilité ;
+* comparaison ;
+* recalcul ;
+* compréhension des changements de classement.
 
 ---
 
-# 20. Abstraction des modèles IA
+# 34. Recherche et filtres
 
-Ne lie pas directement le domaine à un fournisseur spécifique.
+L'application doit permettre progressivement de filtrer les offres selon notamment :
 
-Prévoir des interfaces telles que :
+* date ;
+* localisation ;
+* distance ;
+* remote ;
+* contrat ;
+* durée ;
+* entreprise ;
+* industrie ;
+* catégorie ;
+* compétences ;
+* technologies ;
+* expérience ;
+* formation ;
+* score ;
+* statut utilisateur.
 
-```text
-EmbeddingProvider
-
-LLMProvider
-
-JobInformationExtractor
-```
-
-afin de permettre :
-
-```text
-modèle local
-ou
-service externe
-```
-
-selon la configuration.
-
-Conserver lorsque pertinent :
-
-```text
-provider
-model
-model_version
-prompt_version
-created_at
-```
-
-afin d'assurer la reproductibilité.
+Les filtres compatibles avec la pagination doivent être appliqués côté backend.
 
 ---
 
-# 21. Recherche sémantique
+# 35. API
 
-Ajouter cette fonctionnalité seulement après stabilisation des fonctionnalités de base.
+L'API est versionnée sous :
+
+```text
+/api/v1
+```
+
+Endpoints principaux prévus :
+
+```text
+GET    /api/v1/jobs
+GET    /api/v1/jobs/{id}
+
+GET    /api/v1/profile
+PUT    /api/v1/profile
+
+POST   /api/v1/jobs/{id}/favorite
+POST   /api/v1/jobs/{id}/reject
+POST   /api/v1/jobs/{id}/archive
+
+GET    /api/v1/applications
+POST   /api/v1/applications
+GET    /api/v1/applications/{id}
+PATCH  /api/v1/applications/{id}
+```
+
+Endpoints post-MVP possibles :
+
+```text
+POST   /api/v1/cv
+GET    /api/v1/recommendations
+GET    /api/v1/search
+```
+
+L'API doit utiliser :
+
+* Pydantic v2 ;
+* validation explicite ;
+* pagination ;
+* filtres ;
+* codes HTTP corrects ;
+* gestion centralisée des erreurs ;
+* OpenAPI.
+
+---
+
+# 36. Repository pattern
+
+Ne pas disperser des requêtes SQL complexes dans les routes API.
+
+Utiliser des repositories lorsque cela clarifie la persistence d'un domaine.
+
+Exemples :
+
+* jobs ;
+* profile ;
+* applications ;
+* interactions.
+
+Éviter les abstractions excessivement génériques telles que :
+
+```text
+GenericRepository[T]
+```
+
+si elles rendent le code moins clair.
+
+---
+
+# 37. Transactions
+
+Les opérations importantes doivent être transactionnellement cohérentes.
 
 Exemple :
 
-> Je cherche un stage en machine learning à Paris avec Python et idéalement du NLP.
-
-Le système devra pouvoir combiner :
-
 ```text
-filtres structurés
-+
-recherche textuelle
-+
-similarité vectorielle
+collect
+→ save raw snapshot
+→ normalize
+→ create/update canonical job
+→ create source occurrence
 ```
 
-Privilégier initialement :
+Une erreur intermédiaire ne doit pas laisser un état partiellement écrit.
 
-```text
-PostgreSQL + pgvector
-```
-
-plutôt qu'une nouvelle infrastructure spécialisée.
+Même principe pour le profil et ses relations.
 
 ---
 
-# 22. CV
+# 38. Interactions utilisateur
 
-Prévoir ultérieurement l'import :
-
-* PDF ;
-* DOCX.
-
-Extraire potentiellement :
-
-* expériences ;
-* formations ;
-* compétences ;
-* technologies ;
-* langues ;
-* projets ;
-* certifications ;
-* intitulés de postes.
-
-Architecture :
-
-```text
-CV
- ↓
-extraction texte
- ↓
-extraction structurée
- ↓
-proposition de données
- ↓
-validation utilisateur
- ↓
-profil
-```
-
-Le CV ne doit jamais écraser silencieusement le profil existant.
-
-Toute information extraite doit être **modifiable ou rejetable** par l'utilisateur.
-
----
-
-# 23. Apprentissage à partir des interactions
-
-Enregistrer les interactions :
+Les interactions à enregistrer progressivement sont :
 
 ```text
 view
@@ -1371,520 +1244,60 @@ apply
 archive
 ```
 
-Elles serviront plus tard à identifier des tendances.
+Elles permettront plus tard d'analyser des tendances.
 
-Exemple :
+Le système peut éventuellement proposer :
+
+> Tu sauvegardes régulièrement des offres NLP. Souhaites-tu augmenter l'importance de cette préférence ?
+
+Mais il ne doit **jamais modifier automatiquement une préférence critique sans confirmation explicite**.
+
+---
+
+# 39. Candidatures
+
+Le système doit permettre de suivre les candidatures.
+
+Statuts possibles :
 
 ```text
-Profil déclaré :
-Data Science
-
-Comportement :
-forte préférence observée pour NLP
+TO_REVIEW
+FAVORITE
+TO_PREPARE
+APPLIED
+INTERVIEW
+TECHNICAL_TEST
+OFFER_RECEIVED
+REJECTED
+WITHDRAWN
+ARCHIVED
 ```
 
-Le système pourra suggérer :
-
-> Tu sauvegardes régulièrement des offres NLP. Souhaites-tu augmenter le poids de cette préférence ?
-
-Mais :
-
-**ne modifie jamais automatiquement les préférences critiques sans confirmation explicite de l'utilisateur.**
-
----
-
-# 24. API
-
-Créer une API REST versionnée.
-
-Base recommandée :
+Une candidature peut contenir :
 
 ```text
-/api/v1
-```
-
-Exemples :
-
-```text
-GET    /api/v1/jobs
-GET    /api/v1/jobs/{id}
-
-POST   /api/v1/jobs/{id}/favorite
-POST   /api/v1/jobs/{id}/reject
-POST   /api/v1/jobs/{id}/archive
-
-GET    /api/v1/profile
-PUT    /api/v1/profile
-
-GET    /api/v1/applications
-POST   /api/v1/applications
-GET    /api/v1/applications/{id}
-PATCH  /api/v1/applications/{id}
-
-POST   /api/v1/cv
-
-GET    /api/v1/recommendations
-
-GET    /api/v1/search
-
-GET    /api/v1/sources
-```
-
-Utiliser :
-
-* schémas Pydantic explicites ;
-* validation ;
-* codes HTTP corrects ;
-* pagination ;
-* filtres ;
-* gestion centralisée des erreurs.
-
-FastAPI doit fournir la documentation OpenAPI.
-
----
-
-# 25. Repository pattern pragmatique
-
-La logique métier ne doit pas effectuer directement des requêtes SQL dispersées partout.
-
-Utiliser des repositories lorsque cela crée une séparation réellement utile, notamment pour :
-
-* jobs ;
-* profiles ;
-* applications ;
-* interactions ;
-* collection runs.
-
-Éviter toutefois les abstractions génériques excessives telles qu'un énorme :
-
-```text
-GenericRepository[T]
-```
-
-si cela rend le code moins clair.
-
-Préférer des interfaces orientées métier.
-
----
-
-# 26. Transactions
-
-Les opérations importantes doivent avoir des frontières transactionnelles explicites.
-
-Exemple :
-
-```text
-collect
-→ create RawJobSnapshot
-→ normalize
-→ create/update JobOffer
-→ link source occurrence
-```
-
-Une erreur au milieu d'une opération ne doit pas laisser la base dans un état incohérent.
-
----
-
-# 27. Scheduler et tâches de fond
-
-Ne pas introduire immédiatement Celery + Redis.
-
-Le MVP doit d'abord permettre une collecte :
-
-* manuelle ;
-* testable ;
-* déclenchable par une commande claire.
-
-Lorsque l'automatisation sera ajoutée, commencer avec la solution la plus simple capable de satisfaire le besoin.
-
-Architecture future :
-
-```text
-Scheduler
-    │
-    ▼
-Collection service
-    │
-    ▼
-Normalization
-    │
-    ▼
-Deduplication
-    │
-    ▼
-Enrichment
-    │
-    ▼
-Matching
-    │
-    ▼
-Alerts
-```
-
-La fréquence doit être configurable.
-
-Si la charge exige ultérieurement un worker séparé, faire évoluer l'architecture à ce moment-là.
-
----
-
-# 28. Observabilité
-
-Utiliser des logs structurés.
-
-Chaque exécution de collecte doit avoir un identifiant de corrélation ou un `collection_run_id`.
-
-Exemples :
-
-```text
-INFO collection.started
-INFO source.collection.started
-INFO source.collection.completed
-INFO jobs.collected
-INFO jobs.created
-INFO duplicates.detected
-ERROR source.unavailable
-INFO matching.completed
-```
-
-Enregistrer des statistiques telles que :
-
-* offres trouvées ;
-* nouvelles offres ;
-* offres mises à jour ;
-* doublons ;
-* erreurs ;
-* durée ;
-* annonces analysées ;
-* recommandations dépassant un seuil.
-
-Éviter d'introduire une stack complexe d'observabilité pour le MVP.
-
----
-
-# 29. Gestion des erreurs
-
-Créer une hiérarchie d'erreurs métier explicite.
-
-Exemples :
-
-```text
-SourceUnavailableError
-SourceRateLimitedError
-JobParsingError
-JobNormalizationError
-InvalidJobDataError
-InvalidCVError
-MatchingError
-AIServiceError
-```
-
-Ne pas utiliser des `except Exception` silencieux.
-
-Si une exception générale doit être capturée à une frontière technique, elle doit être journalisée avec suffisamment de contexte.
-
-L'API doit retourner des erreurs compréhensibles sans exposer de stack traces ni de secrets.
-
----
-
-# 30. Configuration
-
-Centraliser la configuration.
-
-Utiliser :
-
-```text
-.env
-.env.example
-Pydantic Settings
-```
-
-Exemples :
-
-```text
-APP_ENV
-DATABASE_URL
-
-LOG_LEVEL
-
-SCRAPER_TIMEOUT
-SCRAPER_DELAY
-
-MATCHING_THRESHOLD
-
-COLLECTION_INTERVAL
-
-AI_PROVIDER
-AI_MODEL
-
-EMBEDDING_PROVIDER
-EMBEDDING_MODEL
-```
-
-Ne jamais versionner de secrets.
-
-Les valeurs par défaut doivent être raisonnables pour le développement local.
-
----
-
-# 31. Sécurité
-
-Même pour une application personnelle :
-
-* valider les entrées ;
-* contrôler les uploads ;
-* limiter la taille des fichiers ;
-* vérifier les types de fichiers ;
-* éviter les chemins arbitraires ;
-* protéger les secrets ;
-* utiliser des requêtes paramétrées via SQLAlchemy ;
-* ne jamais logger les secrets ;
-* ne jamais envoyer inutilement des données personnelles à un service externe.
-
-Si l'application est uniquement accessible via localhost, une authentification peut être repoussée pour le MVP.
-
-En revanche, **avant toute exposition réseau non locale**, mettre en place une authentification appropriée.
-
----
-
-# 32. Confidentialité
-
-Considérer comme sensibles :
-
-* CV ;
-* identité ;
-* coordonnées ;
-* expériences ;
-* profil ;
-* candidatures ;
-* interactions.
-
-Avant tout appel à un fournisseur IA externe :
-
-1. identifier précisément les données nécessaires ;
-2. minimiser les données transmises ;
-3. éviter les informations personnelles inutiles ;
-4. documenter les données envoyées ;
-5. rendre le fournisseur configurable lorsque pertinent.
-
-Prévoir l'utilisation possible de modèles locaux.
-
----
-
-# 33. Tests backend
-
-Utiliser `pytest`.
-
-Créer au minimum des tests unitaires pour :
-
-* normalisation ;
-* parsing ;
-* déduplication ;
-* matching ;
-* critères éliminatoires ;
-* calcul des scores ;
-* gestion des valeurs inconnues ;
-* configuration ;
-* extraction.
-
-Créer des tests d'intégration pour :
-
-* PostgreSQL ;
-* repositories ;
-* API FastAPI ;
-* migrations ;
-* pipeline complet de collecte.
-
-Les tests des collecteurs doivent utiliser :
-
-* fixtures HTML ;
-* payloads JSON enregistrés ;
-* mocks HTTP.
-
-Les tests automatisés ne doivent pas dépendre directement d'un site externe en production.
-
----
-
-# 34. Tests frontend
-
-Prévoir notamment :
-
-* tests unitaires des composants importants ;
-* tests des filtres ;
-* tests des principales interactions ;
-* tests du chargement et des erreurs API.
-
-Utiliser des données fictives ou une API mockée lorsque pertinent.
-
-Des tests end-to-end pourront être ajoutés sur les parcours critiques.
-
----
-
-# 35. Tests de régression des sources
-
-Pour chaque collecteur réel, conserver lorsque légalement et raisonnablement possible des **fixtures représentatives anonymisées ou minimales**.
-
-Elles permettent de détecter qu'un changement de parser casse une source sans envoyer de requêtes réelles.
-
-Exemple :
-
-```text
-tests/fixtures/sources/
-└── source_a/
-    ├── listing.html
-    ├── detail.html
-    └── expected.json
+job_offer_id
+company
+position
+status
+application_date
+follow_up_date
+cv_reference
+cover_letter_reference
+notes
+contacts
+next_action
+created_at
+updated_at
 ```
 
 ---
 
-# 36. Docker
-
-Créer un environnement Docker simple.
-
-MVP :
-
-```text
-docker-compose.yml
-├── postgres
-├── backend
-└── frontend
-```
-
-N'ajouter :
-
-```text
-worker
-redis
-```
-
-que lorsqu'ils deviennent réellement nécessaires.
-
-Utiliser des images multi-stage lorsque cela apporte un bénéfice.
-
-Le build backend doit rester cohérent avec uv et `uv.lock`.
-
-Les dépendances utilisées dans Docker doivent correspondre exactement au projet verrouillé.
-
----
-
-# 37. Expérience développeur
-
-Le projet doit pouvoir être initialisé facilement.
-
-Le README doit indiquer clairement les commandes.
-
-Exemple de workflow backend :
-
-```bash
-cd backend
-uv sync
-uv run alembic upgrade head
-uv run uvicorn app.main:app --reload
-```
-
-Validation :
-
-```bash
-uv run ruff check .
-uv run ruff format --check .
-uv run ty check
-uv run pytest
-```
-
-Le LLM doit fournir les commandes exactes correspondant au projet réellement généré et ne pas copier mécaniquement ces exemples si l'organisation diffère.
-
----
-
-# 38. Qualité du code
-
-Je veux du code :
-
-* lisible ;
-* explicitement typé ;
-* modulaire ;
-* testable ;
-* maintenable ;
-* correctement nommé ;
-* documenté lorsque nécessaire.
-
-Éviter :
-
-* fichiers gigantesques ;
-* fonctions de centaines de lignes ;
-* logique métier dans les routes FastAPI ;
-* classes purement cérémonielles ;
-* abstractions prématurées ;
-* duplication ;
-* dépendances inutiles ;
-* global state incontrôlé ;
-* `Any` systématique ;
-* commentaires répétant simplement le code.
-
-Utiliser SOLID lorsque cela améliore réellement la conception.
-
-Ne pas faire du design pattern pour le plaisir de faire du design pattern.
-
----
-
-# 39. Documentation
-
-Créer au minimum :
-
-```text
-README.md
-docs/ARCHITECTURE.md
-docs/DEVELOPMENT.md
-```
-
-Prévoir éventuellement :
-
-```text
-docs/adr/
-```
-
-pour documenter les décisions structurantes.
-
-Exemples :
-
-```text
-ADR-001 modular-monolith.md
-ADR-002 postgres-as-primary-store.md
-ADR-003 deterministic-matching-first.md
-```
-
-Le README doit expliquer :
-
-* objectif ;
-* stack ;
-* prérequis ;
-* installation ;
-* lancement ;
-* variables d'environnement ;
-* migrations ;
-* tests ;
-* lint ;
-* format ;
-* vérification des types ;
-* Docker.
-
----
-
-# 40. Interface utilisateur
-
-## Dashboard
-
-Afficher notamment :
-
-* nouvelles offres ;
-* recommandations fortes ;
-* favoris ;
-* candidatures en cours ;
-* entretiens ;
-* statistiques utiles.
+# 40. Frontend métier
 
 ## Liste des offres
 
-Chaque carte pourra afficher :
+Afficher progressivement :
 
 ```text
 titre
@@ -1903,18 +1316,18 @@ Permettre :
 * recherche ;
 * filtres ;
 * tri ;
+* détail ;
 * favori ;
 * rejet ;
 * archivage.
 
-## Détail d'une offre
+## Détail
 
-Afficher :
+Afficher notamment :
 
-* contenu ;
-* données structurées ;
-* entreprise ;
-* localisation ;
+* description ;
+* informations structurées ;
+* provenance ;
 * compétences ;
 * technologies ;
 * score ;
@@ -1923,52 +1336,136 @@ Afficher :
 * points forts ;
 * points faibles ;
 * informations inconnues ;
-* sources originales ;
-* actions.
+* lien original.
+
+## Profil
+
+Permettre de consulter et modifier les informations du profil et les préférences.
+
+## Candidatures
+
+Permettre de consulter et mettre à jour les candidatures.
 
 ---
 
-# 41. Filtres
+# 41. IA et NLP
 
-Prévoir progressivement :
+Les fonctionnalités IA arrivent **après le MVP déterministe**.
 
-* score minimum ;
-* date ;
-* localisation ;
-* distance ;
-* remote ;
-* contrat ;
-* durée ;
-* entreprise ;
-* industrie ;
-* catégorie ;
-* compétences ;
+Utiliser d'abord :
+
+* règles ;
+* parsing ;
+* normalisation ;
+* méthodes locales ;
+* NLP classique ;
+
+lorsque cela suffit.
+
+Objectifs futurs :
+
+* extraction de compétences ;
 * technologies ;
-* niveau d'expérience ;
-* niveau d'étude ;
-* statut utilisateur.
-
-Les filtres courants doivent autant que possible être exécutés côté backend afin de fonctionner correctement avec la pagination.
+* missions ;
+* niveaux ;
+* langues ;
+* informations implicites ;
+* embeddings ;
+* comparaison sémantique.
 
 ---
 
-# 42. Alertes
+# 42. Abstraction IA future
 
-Les alertes ne font pas partie du premier MVP.
+Ne pas lier le domaine à un fournisseur IA spécifique.
 
-Architecture future :
+Lorsque la roadmap atteint cette phase, des abstractions telles que :
 
 ```text
-new/updated job
-      ↓
-matching
-      ↓
-threshold evaluation
-      ↓
-alert candidate
-      ↓
-notification
+EmbeddingProvider
+LLMProvider
+JobInformationExtractor
 ```
+
+pourront être introduites.
+
+Ne pas les créer prématurément.
+
+Lorsqu'une IA externe est utilisée, conserver lorsque pertinent :
+
+```text
+provider
+model
+model_version
+prompt_version
+created_at
+```
+
+---
+
+# 43. Recherche sémantique
+
+Fonctionnalité post-MVP.
+
+Exemple :
+
+> Je cherche un stage en machine learning à Paris avec Python et idéalement du NLP.
+
+Approche prévue :
+
+```text
+filtres structurés
++
+recherche textuelle
++
+similarité vectorielle
+```
+
+Privilégier :
+
+```text
+PostgreSQL + pgvector
+```
+
+avant d'introduire une nouvelle base spécialisée.
+
+---
+
+# 44. Scheduler
+
+La collecte doit d'abord fonctionner :
+
+* manuellement ;
+* de manière testable ;
+* avec une commande claire.
+
+L'automatisation arrivera plus tard.
+
+Architecture conceptuelle :
+
+```text
+Scheduler
+   ↓
+Collection
+   ↓
+Normalization
+   ↓
+Deduplication
+   ↓
+Enrichment
+   ↓
+Matching
+   ↓
+Alerts
+```
+
+Ne pas introduire Celery + Redis uniquement pour disposer d'un scheduler.
+
+---
+
+# 45. Alertes
+
+Les alertes sont post-MVP.
 
 Exemple :
 
@@ -1976,527 +1473,587 @@ Exemple :
 Nouvelle offre correspondant à 92 % de ton profil.
 ```
 
-Les alertes doivent être configurables.
-
-Canaux possibles plus tard :
+Canaux futurs possibles :
 
 * application ;
 * email ;
 * autres intégrations.
 
-Éviter les notifications répétées pour la même offre.
+Elles doivent être :
+
+* configurables ;
+* désactivables ;
+* non dupliquées inutilement.
 
 ---
 
-# 43. MVP
+# 46. Observabilité
 
-Le MVP doit rester volontairement limité.
+Utiliser des logs structurés.
 
-Il doit contenir :
+Exemples :
 
-1. architecture et environnement ;
-2. PostgreSQL ;
-3. migrations ;
-4. API FastAPI ;
-5. profil utilisateur ;
-6. modèle JobOffer ;
-7. source fictive ;
-8. pipeline collecte → normalisation → stockage ;
-9. déduplication déterministe basique ;
-10. scoring déterministe ;
-11. explication du score ;
-12. liste d'offres ;
-13. détail d'offre ;
-14. filtres essentiels ;
-15. favoris/rejets ;
-16. tests ;
-17. Docker ;
-18. documentation.
+```text
+collection.started
+source.collection.started
+source.collection.completed
+jobs.collected
+jobs.created
+duplicates.detected
+matching.completed
+source.unavailable
+```
 
-Le MVP ne nécessite pas :
+Une collecte pourra disposer d'un identifiant tel que :
 
-* embeddings ;
-* LLM ;
-* machine learning ;
-* Redis ;
-* Celery ;
-* multiples vrais scrapers ;
-* alertes ;
-* extension navigateur ;
-* mobile ;
-* génération de CV ;
-* génération de lettres.
+```text
+collection_run_id
+```
+
+Statistiques utiles :
+
+* offres trouvées ;
+* nouvelles offres ;
+* offres mises à jour ;
+* doublons ;
+* erreurs ;
+* durée ;
+* annonces analysées ;
+* recommandations élevées.
+
+Ne pas introduire une stack d'observabilité complexe pour le MVP.
 
 ---
 
-# 44. Roadmap imposée
+# 47. Gestion des erreurs
 
-## Étape 0 — Architecture
+Les erreurs doivent être explicites.
 
-Analyser précisément :
+Exemples futurs :
 
-* architecture ;
-* stack ;
-* domaines ;
-* modèle de données ;
-* interfaces principales ;
-* flux ;
-* collecte ;
+```text
+SourceUnavailableError
+SourceRateLimitedError
+JobParsingError
+JobNormalizationError
+InvalidJobDataError
+InvalidCVError
+MatchingError
+AIServiceError
+```
+
+Ne pas utiliser d'`except Exception` silencieux.
+
+À la frontière HTTP :
+
+```text
+Application/domain error
+        ↓
+FastAPI exception handler
+        ↓
+HTTP response
+```
+
+Ne pas exposer :
+
+* stack traces ;
+* secrets ;
+* détails internes inutiles.
+
+---
+
+# 48. Configuration
+
+Centraliser la configuration.
+
+Utiliser :
+
+```text
+.env
+.env.example
+Pydantic Settings
+```
+
+Variables potentielles :
+
+```text
+APP_ENV
+DATABASE_URL
+LOG_LEVEL
+
+SCRAPER_TIMEOUT
+SCRAPER_DELAY
+
+MATCHING_THRESHOLD
+COLLECTION_INTERVAL
+
+AI_PROVIDER
+AI_MODEL
+EMBEDDING_PROVIDER
+EMBEDDING_MODEL
+```
+
+Ajouter uniquement les variables nécessaires à l'étape réellement implémentée.
+
+Ne jamais versionner les secrets.
+
+---
+
+# 49. Sécurité
+
+Même pour une application personnelle :
+
+* valider les entrées ;
+* protéger les secrets ;
+* contrôler les futurs uploads ;
+* limiter les tailles de fichiers ;
+* vérifier les types de fichiers ;
+* éviter les chemins arbitraires ;
+* utiliser correctement SQLAlchemy ;
+* ne jamais logger de secrets ;
+* ne pas envoyer inutilement des données personnelles à des services externes.
+
+Une authentification complète peut rester hors MVP tant que l'application reste strictement locale.
+
+Avant toute exposition réseau non locale, la sécurité d'accès devra être réévaluée.
+
+---
+
+# 50. Confidentialité
+
+Considérer comme sensibles :
+
+* profil ;
+* identité ;
+* coordonnées ;
+* expériences ;
+* CV ;
+* candidatures ;
+* interactions.
+
+Avant un appel à une IA externe :
+
+1. identifier les données réellement nécessaires ;
+2. minimiser les informations envoyées ;
+3. éviter les données personnelles inutiles ;
+4. documenter ce qui est envoyé ;
+5. rendre le fournisseur configurable lorsque pertinent.
+
+Les modèles locaux doivent rester une possibilité.
+
+---
+
+# 51. Tests backend
+
+Les tests backend utilisent pytest.
+
+Ils sont situés sous :
+
+```text
+src/backend/tests/
+```
+
+Prévoir progressivement des tests unitaires pour :
+
+* parsing ;
+* normalisation ;
+* validation ;
 * déduplication ;
 * matching ;
-* sécurité ;
-* tests ;
-* Docker ;
-* risques ;
-* MVP.
+* critères éliminatoires ;
+* calcul des scores ;
+* gestion de `UNKNOWN` ;
+* services métier.
 
-**Aucun code applicatif à cette étape.**
-
----
-
-## Étape 1 — Bootstrap du repository
-
-Créer :
-
-* arborescence ;
-* backend Python ;
-* frontend ;
-* `pyproject.toml` ;
-* configuration uv ;
-* Ruff ;
-* ty ;
-* pytest ;
-* configuration TypeScript ;
-* fichiers Git ;
-* documentation minimale.
-
-Valider le quality gate.
-
----
-
-## Étape 2 — Infrastructure locale
-
-Créer :
+Tests d'intégration pour :
 
 * PostgreSQL ;
-* Dockerfiles ;
-* Docker Compose ;
-* configuration ;
-* health checks.
-
----
-
-## Étape 3 — Persistence
-
-Créer :
-
-* SQLAlchemy ;
-* Alembic ;
-* session DB ;
-* modèles initiaux ;
+* repositories ;
+* FastAPI ;
 * migrations ;
-* repositories nécessaires.
+* transactions ;
+* pipeline de collecte.
+
+Les tests sont volontairement exclus de Ruff et ty.
 
 ---
 
-## Étape 4 — API FastAPI
+# 52. Tests des collecteurs
 
-Créer :
+Les collecteurs doivent être testés avec :
 
-* application ;
-* configuration ;
-* gestion des erreurs ;
-* health endpoint ;
-* routes initiales ;
-* OpenAPI.
+* fixtures HTML ;
+* JSON ;
+* XML ;
+* payloads enregistrés ;
+* mocks HTTP.
 
----
+Les tests automatisés ne doivent pas dépendre du fonctionnement d'un site externe réel.
 
-## Étape 5 — Profil
-
-Créer le domaine profil et les endpoints associés.
-
----
-
-## Étape 6 — Offres
-
-Créer le domaine JobOffer.
-
----
-
-## Étape 7 — Source fictive
-
-Créer un collecteur de données fictives.
-
-Il doit permettre de tester toute la chaîne sans dépendre d'un site externe.
-
----
-
-## Étape 8 — Pipeline
-
-Implémenter :
+Exemple d'organisation future :
 
 ```text
-collect
-→ snapshot
-→ normalize
-→ deduplicate
-→ persist
+src/backend/tests/fixtures/sources/
+└── source_a/
+    ├── listing.html
+    ├── detail.html
+    └── expected.json
 ```
 
 ---
 
-## Étape 9 — Premier connecteur réel
+# 53. Tests frontend
 
-Choisir une seule source après vérification des conditions de collecte.
+Prévoir progressivement :
 
-Documenter la fiche source avant l'implémentation.
-
----
-
-## Étape 10 — Matching V1
-
-Créer :
-
-* préférences ;
-* contraintes ;
-* scoring ;
-* explications ;
-* versionnement.
-
----
-
-## Étape 11 — Frontend offres
-
-Créer :
-
-* liste ;
-* pagination ;
-* recherche ;
+* composants importants ;
 * filtres ;
-* tri ;
-* détail.
+* formulaires ;
+* interactions ;
+* chargement API ;
+* erreurs API.
+
+Utiliser des données fictives ou une API mockée lorsque pertinent.
+
+Les parcours complets critiques pourront ultérieurement disposer de tests end-to-end.
 
 ---
 
-## Étape 12 — Profil frontend
+# 54. Docker
 
-Créer l'édition du profil et des préférences.
-
----
-
-## Étape 13 — Favoris et rejets
-
-Ajouter les interactions.
-
----
-
-## Étape 14 — Candidatures
-
-Ajouter le suivi des candidatures.
-
----
-
-## Étape 15 — CV
-
-Ajouter import, extraction et validation.
-
----
-
-## Étape 16 — Enrichissement NLP
-
-Ajouter l'extraction structurée avancée.
-
----
-
-## Étape 17 — Embeddings
-
-Ajouter les représentations vectorielles.
-
----
-
-## Étape 18 — Recherche sémantique
-
-Ajouter pgvector et recherche hybride si justifié.
-
----
-
-## Étape 19 — Matching hybride
-
-Combiner progressivement :
+L'environnement local MVP comprend :
 
 ```text
-règles déterministes
-+
-similarité sémantique
-+
-préférences observées
+docker-compose.yml
+├── postgres
+├── backend
+└── frontend
+```
+
+Ne pas ajouter sans besoin :
+
+```text
+worker
+redis
+queue
+```
+
+Le build Python doit utiliser :
+
+```text
+pyproject.toml
+uv.lock
+```
+
+situés à la racine du repository.
+
+Les Dockerfiles doivent tenir compte de la structure actuelle :
+
+```text
+src/backend/
+src/frontend/
 ```
 
 ---
 
-## Étape 20 — Scheduler
+# 55. Qualité du code
 
-Automatiser la collecte.
+Le code applicatif doit être :
 
----
+* lisible ;
+* typé ;
+* modulaire ;
+* testable ;
+* maintenable ;
+* correctement nommé.
 
-## Étape 21 — Alertes
+Éviter :
 
-Ajouter les notifications.
+* fichiers gigantesques ;
+* fonctions de centaines de lignes ;
+* logique métier dans les routes ;
+* abstraction prématurée ;
+* classes purement cérémonielles ;
+* duplication ;
+* dépendances inutiles ;
+* état global incontrôlé ;
+* `Any` systématique ;
+* commentaires qui répètent simplement le code.
 
----
+SOLID peut être utilisé lorsqu'il améliore réellement la conception.
 
-## Étape 22 — Personnalisation avancée
-
-Exploiter les interactions pour proposer des adaptations.
-
----
-
-## Étape 23 — Stabilisation
-
-Finaliser :
-
-* tests ;
-* performances ;
-* sécurité ;
-* documentation ;
-* observabilité ;
-* UX ;
-* nettoyage architectural.
+Ne pas appliquer un design pattern uniquement pour respecter une théorie architecturale.
 
 ---
 
-# 45. Méthode de travail obligatoire
+# 56. Dépendances
 
-Ne génère **jamais l'intégralité du projet en une seule fois**.
+Avant d'ajouter une dépendance :
+
+1. déterminer si elle est nécessaire ;
+2. vérifier si la bibliothèque standard suffit ;
+3. vérifier si une dépendance existante couvre déjà le besoin ;
+4. éviter les outils redondants ;
+5. documenter les dépendances structurantes.
+
+Les dépendances Python doivent être ajoutées avec uv.
+
+Ne jamais modifier `uv.lock` manuellement.
+
+---
+
+# 57. Documentation
+
+Maintenir au minimum :
+
+```text
+README.md
+docs/PROJECT_SPEC.md
+docs/ARCHITECTURE.md
+docs/ROADMAP.md
+docs/DEVELOPMENT.md
+```
+
+Les décisions importantes peuvent être documentées sous :
+
+```text
+docs/adr/
+```
+
+Un ADR doit correspondre à une vraie décision structurante.
+
+Ne pas créer un ADR pour un détail d'implémentation ordinaire.
+
+---
+
+# 58. Méthode de développement
+
+Le projet doit être développé **étape par étape**.
+
+L'ordre exact, le périmètre et le statut des étapes sont définis exclusivement dans :
+
+```text
+docs/ROADMAP.md
+```
+
+Ne pas dupliquer ici la roadmap détaillée afin d'éviter les divergences.
 
 Pour chaque étape :
 
-1. rappeler brièvement l'objectif ;
-2. indiquer les choix d'architecture concernés ;
-3. indiquer les fichiers créés ou modifiés ;
-4. produire le code complet nécessaire ;
-5. indiquer précisément où placer chaque fichier ;
-6. fournir les commandes d'installation ;
-7. fournir les commandes d'exécution ;
-8. fournir les tests ;
-9. exécuter mentalement une vérification de cohérence ;
-10. vérifier les imports et dépendances ;
-11. vérifier le typage ;
-12. vérifier la compatibilité des migrations ;
-13. donner les commandes Ruff ;
-14. donner la commande ty ;
-15. donner la commande pytest ;
-16. signaler les limitations connues ;
-17. mettre à jour la documentation concernée ;
-18. terminer par un résumé de ce qui est maintenant fonctionnel.
-
-Ne passe pas automatiquement à plusieurs grandes étapes dans une seule réponse.
+1. lire la documentation ;
+2. inspecter le repository ;
+3. comprendre le périmètre ;
+4. implémenter uniquement l'étape demandée ;
+5. ajouter les tests correspondants ;
+6. exécuter les validations ;
+7. corriger les régressions introduites ;
+8. mettre à jour la documentation nécessaire ;
+9. mettre à jour `ROADMAP.md` ;
+10. arrêter avant l'étape suivante.
 
 ---
 
-# 46. Definition of Done d'une étape
+# 59. Definition of Done
 
-Une étape backend n'est terminée que si :
+Une fonctionnalité backend est considérée comme correctement implémentée lorsque :
 
 ```text
-code implémenté
+code applicatif
 +
 tests correspondants
 +
-ruff check
+Ruff sur le code applicatif
 +
-ruff format --check
+Ruff format sur le code applicatif
 +
-ty check
+ty sur le code applicatif
 +
-pytest
+pytest sur les tests
 +
 documentation pertinente
 ```
 
 sont cohérents.
 
-Une fonctionnalité ne doit pas être déclarée terminée si elle contient seulement du pseudo-code.
-
----
-
-# 47. Règles lorsque tu produis du code
-
-Lorsque je demande l'implémentation :
-
-* fournis du code réellement exécutable ;
-* privilégie des fichiers complets lorsque nécessaire ;
-* ne laisse pas de `TODO` à la place d'une fonctionnalité annoncée comme implémentée ;
-* ne fabrique pas d'API inexistante ;
-* ne suppose pas qu'une bibliothèque possède une fonction sans vérification raisonnable ;
-* garde les dépendances au minimum ;
-* ne modifie pas l'architecture sans expliquer pourquoi.
-
-Si une information technique peut avoir changé depuis tes connaissances internes, vérifie la documentation officielle avant d'imposer une syntaxe ou une API.
-
----
-
-# 48. Règles concernant les dépendances
-
-Avant d'ajouter une dépendance :
-
-1. déterminer si elle est réellement nécessaire ;
-2. préférer la bibliothèque standard si elle suffit ;
-3. éviter plusieurs bibliothèques pour la même fonction ;
-4. expliquer les dépendances structurantes ;
-5. l'ajouter via uv pour Python.
-
-Exemple :
+Quality gate :
 
 ```bash
-uv add sqlalchemy
+uv lock --check
+uv run ruff check .
+uv run ruff format --check .
+uv run ty check
+uv run pytest src/backend/tests
 ```
 
-ou :
+Les tests backend sont volontairement exclus de Ruff et ty.
 
-```bash
-uv add --dev pytest
-```
-
-Ne modifie pas `uv.lock` manuellement.
+Une fonctionnalité ne doit pas être déclarée terminée si elle contient seulement du pseudo-code ou des placeholders représentant la fonctionnalité annoncée.
 
 ---
 
-# 49. Gestion des changements architecturaux
+# 60. Gestion des erreurs de quality gate
 
-Si une étape révèle qu'une décision initiale n'est plus adaptée :
+Lorsqu'un contrôle échoue, distinguer :
 
-1. explique le problème ;
-2. présente l'impact ;
-3. propose le changement minimal ;
-4. indique les fichiers touchés ;
-5. mets à jour `ARCHITECTURE.md` ;
-6. crée un ADR si le changement est significatif.
+1. erreur introduite ou affectée par l'étape courante ;
+2. erreur préexistante réellement indépendante ;
+3. origine incertaine.
 
-Ne fais jamais évoluer silencieusement l'architecture.
+Toute erreur introduite par le travail courant doit être corrigée.
+
+Une erreur ne doit pas être qualifiée d'« hors périmètre » simplement parce qu'elle se trouve dans un fichier différent.
+
+Les limitations réellement indépendantes peuvent être documentées sans bloquer systématiquement la progression si elles sont explicitement acceptées.
 
 ---
 
-# 50. Fonctionnalités futures à garder possibles
+# 61. Discipline de scope
 
-Sans les implémenter prématurément, l'architecture doit permettre plus tard :
+Ne pas implémenter plusieurs grandes étapes simultanément.
+
+Ne pas anticiper :
+
+* embeddings ;
+* NLP ;
+* scheduler ;
+* alertes ;
+* CV ;
+* recherche sémantique ;
+* nouvelles infrastructures ;
+
+avant leur étape dédiée.
+
+Lorsque la roadmap indique :
+
+```text
+Étape N
+```
+
+n'implémenter que cette étape et les modifications minimales nécessaires à son fonctionnement.
+
+Ne pas réorganiser silencieusement la roadmap.
+
+---
+
+# 62. Fonctionnalités futures
+
+L'architecture doit pouvoir évoluer vers :
 
 * nouvelles sources ;
 * nouveaux moteurs de matching ;
-* nouveaux modèles d'embeddings ;
-* nouveaux fournisseurs LLM ;
+* NLP ;
+* embeddings ;
+* fournisseurs IA ;
 * modèles locaux ;
-* alertes ;
+* notifications ;
 * statistiques ;
-* navigateur/extension ;
+* extension navigateur ;
 * mobile ;
 * génération de CV ;
 * génération de lettres ;
-* analyse des candidatures ;
-* recommandations basées sur le comportement.
+* personnalisation comportementale.
 
-Il ne faut cependant **pas construire aujourd'hui les abstractions complexes nécessaires à toutes ces hypothèses**.
+Mais :
 
-Prévoir des frontières propres suffit.
+> la possibilité d'une fonctionnalité future n'est pas une raison suffisante pour construire dès aujourd'hui son infrastructure.
+
+Des frontières propres suffisent.
 
 ---
 
-# 51. Ce qu'il ne faut surtout pas faire
+# 63. Ce qu'il ne faut pas faire
 
-Évite explicitement :
+Éviter explicitement :
 
 ```text
 microservices dès le MVP
+
 Redis sans besoin concret
+
 Celery sans besoin concret
+
 Elasticsearch dès le MVP
+
 base vectorielle externe dès le MVP
+
 LLM pour chaque annonce
+
 scraping Playwright systématique
-un scraper gigantesque contenant toute la logique
-logique métier dans FastAPI
+
+scraper contenant toute la logique métier
+
+logique métier dans les routes FastAPI
+
 suppression destructive des doublons
-score inexplicable
-données manquantes considérées automatiquement négatives
-auto-modification silencieuse du profil
+
+matching opaque
+
+données absentes automatiquement considérées négatives
+
+modification silencieuse des préférences utilisateur
+
 secrets dans Git
-tests dépendant de sites réels
-dépendances Python gérées à la fois avec pip et uv sans raison
-multiplication des linters/formatters Python redondants
+
+tests dépendant de sites externes
+
+pip + uv utilisés comme workflows concurrents
+
+multiplication de linters Python redondants
+
+abstractions anticipant des fonctionnalités non encore développées
+
+réorganisation silencieuse de la roadmap
 ```
 
 ---
 
-# 52. Première réponse attendue
+# 64. Hiérarchie des décisions
 
-Pour ta **première réponse**, ne génère encore aucun code applicatif.
-
-Produis uniquement une **analyse d'architecture détaillée** structurée exactement autour des points suivants :
-
-1. reformulation du besoin ;
-2. objectifs et non-objectifs ;
-3. périmètre exact du MVP ;
-4. architecture globale ;
-5. justification du monolithe modulaire ;
-6. stack technique finale ;
-7. rôle de `uv`, `ruff` et `ty` ;
-8. architecture backend ;
-9. architecture frontend ;
-10. modèle de données initial ;
-11. architecture des sources ;
-12. pipeline de collecte ;
-13. normalisation ;
-14. stratégie de déduplication ;
-15. moteur de matching V1 ;
-16. gestion des critères éliminatoires ;
-17. gestion des données inconnues ;
-18. explicabilité du score ;
-19. stratégie IA/NLP future ;
-20. stratégie de recherche sémantique ;
-21. sécurité ;
-22. confidentialité ;
-23. stratégie de tests ;
-24. stratégie Docker ;
-25. observabilité ;
-26. gestion des erreurs ;
-27. risques techniques ;
-28. risques liés aux sources externes ;
-29. roadmap complète ;
-30. structure proposée du repository ;
-31. Definition of Done ;
-32. proposition concrète de l'Étape 1.
-
-Pour chaque décision structurante, indique brièvement :
+Avant toute décision importante, vérifier dans cet ordre :
 
 ```text
-Décision
-Pourquoi
-Alternative écartée
-Quand reconsidérer cette décision
+PROJECT_SPEC
+      ↓
+ARCHITECTURE
+      ↓
+ROADMAP
+      ↓
+DEVELOPMENT
+      ↓
+implementation
 ```
 
-Termine par :
+Interprétation :
 
-```text
-Étape suivante proposée : Étape 1 — Bootstrap du repository
-```
-
-mais **n'implémente pas encore cette étape**.
+* `PROJECT_SPEC` définit le besoin ;
+* `ARCHITECTURE` définit la manière adoptée de le construire ;
+* `ROADMAP` définit quand le construire ;
+* `DEVELOPMENT` définit comment travailler avec le repository.
 
 ---
 
-# 53. Principe directeur final
+# 65. Principe directeur final
 
-À chaque décision, demande-toi :
+À chaque décision, poser la question :
 
 > Cette décision améliore-t-elle réellement notre capacité à identifier de manière fiable, compréhensible et maintenable les offres les plus pertinentes pour l'utilisateur ?
 
-Si la réponse est non, simplifie.
+Si la réponse est non, simplifier.
 
-Construis d'abord une excellente application déterministe et fiable.
+Préférer :
 
-Ajoute ensuite progressivement l'intelligence sémantique.
+```text
+simple > complexe
+explicite > implicite
+déterministe > opaque
+testé > supposé
+progressif > massif
+réversible > destructif
+maintenable > ingénieux
+```
 
-La complexité doit être **justifiée par un besoin mesurable**, jamais anticipée pour elle-même.
+Construire d'abord une excellente application déterministe et fiable.
+
+Ajouter ensuite progressivement l'intelligence sémantique.
+
+La complexité doit être justifiée par un besoin réel, jamais par anticipation.

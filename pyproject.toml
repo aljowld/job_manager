@@ -38,3 +38,10 @@ select = ["E", "F", "I", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["src/backend/tests"]
 pythonpath = ["src/backend"]
+
+[tool.ruff]
+extend-exclude = ["src/backend/tests"]
+
+[tool.ty.src]
+include = ["src/backend/app"]
+exclude = ["src/backend/tests"]
