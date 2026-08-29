@@ -1,6 +1,6 @@
 # Roadmap du projet
 
-Statut actuel : Étape 1 — Bootstrap du repository terminé.
+Statut actuel : Étape 2 — Infrastructure locale configurée, validation Docker bloquée par l’absence de Docker dans cet environnement.
 
 La roadmap suit la logique de développement incrémental définie dans AGENTS.md et la spécification produit. Le projet ne doit pas avancer vers l’étape suivante sans validation de l’architecture de l’étape courante.
 
@@ -22,11 +22,9 @@ Livrables attendus :
 - stratégie de tests et Docker ;
 - ADRs et décisions structurantes.
 
-Ce document et les ADR associés définissent l’état de référence pour l’étape 0.
-
 ### État
 
-Ceci est désormais validé et documenté dans [docs/ARCHITECTURE.md](ARCHITECTURE.md) et les ADRs associés.
+Validé et documenté dans [docs/ARCHITECTURE.md](ARCHITECTURE.md) et les ADRs associés.
 
 ---
 
@@ -45,17 +43,42 @@ Objectif : mettre en place le squelette technique initial du projet.
 - exemple de variables d’environnement ;
 - documentation de démarrage minimale.
 
+### État
+
+Terminé et validé.
+
+---
+
+## Étape 2 — Infrastructure locale
+
+Objectif : permettre un démarrage local reproductible avec PostgreSQL et Docker Compose, sans implémenter de logique métier.
+
+### Inclu dans cette étape
+
+- service PostgreSQL avec volume persistant ;
+- service backend Docker ;
+- service frontend Docker ;
+- configuration d’environnement centralisée ;
+- variables Docker/PostgreSQL ;
+- health checks basiques ;
+- documentation de démarrage local ;
+- cohérence backend / Docker / uv.
+
 ### Non inclus dans cette étape
 
-- aucun modèle métier ;
-- aucune base PostgreSQL ;
-- aucun collecteur ;
-- aucun moteur de matching ;
-- aucune fonctionnalité des étapes suivantes.
+- modèles SQLAlchemy métier ;
+- migrations de persistance ;
+- JobOffer, UserProfile, collecteur ou matching ;
+- fonction de business logic ;
+- toute étape d’implémentation métier.
+
+### État
+
+Configuration mise en place dans le dépôt. Le runtime Docker réel n’a pas pu être validé dans cet environnement car Docker est absent. La synthèse YAML et les vérifications Python effectuées sont correctes, mais le lancement de `docker compose up` reste à exécuter sur une machine avec Docker installé.
 
 ---
 
-## Étape 2 — Modèle métier et persistance
+## Étape 3 — Modèle métier et persistance
 
 ### Objectif
 
@@ -70,26 +93,13 @@ Implémenter les premiers modèles de données, repositories et migrations initi
 - MatchResult ;
 - premières API de lecture/écriture.
 
----
+### État
 
-## Étape 2 — Modèle métier et persistance
-
-### Objectif
-
-Implémenter les premiers modèles de données, repositories et migrations initiales.
-
-### Sous-étapes
-
-- JobSource et RawJobSnapshot ;
-- JobOffer et JobOccurrence ;
-- UserProfile et UserPreference ;
-- Interaction et Application ;
-- MatchResult ;
-- premières API de lecture/écriture.
+Non commencé.
 
 ---
 
-## Étape 3 — Collecte et normalisation
+## Étape 4 — Collecte et normalisation
 
 ### Objectif
 
@@ -106,7 +116,7 @@ Construire le canal d’acquisition des données sources.
 
 ---
 
-## Étape 4 — Déduplication et matching déterministe
+## Étape 5 — Déduplication et matching déterministe
 
 ### Objectif
 
@@ -122,7 +132,7 @@ Faire fonctionner les mécanismes de tri et de recommandation.
 
 ---
 
-## Étape 5 — Frontend MVP
+## Étape 6 — Frontend MVP
 
 ### Objectif
 
@@ -139,7 +149,7 @@ Mettre en place l’interface utilisateur principale.
 
 ---
 
-## Étape 6 — Évolution du système
+## Étape 7 — Évolution du système
 
 ### Objectif
 
@@ -167,4 +177,4 @@ Avant chaque nouvelle étape, vérifier :
 - absence de sur-ingénierie ;
 - respect du périmètre de la step courante.
 
-Le projet est actuellement à l’arrêt de la roadmap au niveau d’architecture. L’étape 1 n’est pas commencée dans ce lot de travail.
+Le projet reste sur la phase d’infrastructure locale, sans démarrage de l’Étape 3.
