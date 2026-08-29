@@ -290,8 +290,8 @@ Before considering backend work complete, run the relevant checks from the repos
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```

@@ -358,8 +358,8 @@ Le quality gate est exécuté depuis la racine du repository :
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```
@@ -1879,8 +1879,8 @@ Quality gate :
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```

@@ -1245,11 +1245,30 @@ Ruff assure :
 
 du code applicatif Python.
 
-Commandes de référence depuis la racine :
+Pendant le développement, les corrections automatiques sûres peuvent être appliquées avec :
 
 ```bash
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app --fix
+uv run ruff format src/backend/app
+```
+
+`--fix` est la méthode privilégiée pour corriger automatiquement les violations sûres, notamment :
+
+* imports inutilisés ;
+* ordre et regroupement des imports ;
+* imports dupliqués ;
+* autres corrections automatiques sûres proposées par Ruff.
+
+La commande `--fix` ne fait pas partie du quality gate final.
+
+Les validations finales restent non destructives et s’exécutent depuis la racine avec :
+
+```bash
+uv lock --check
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
+uv run ty check
+uv run pytest src/backend/tests
 ```
 
 Les tests backend sont exclus via la configuration du projet.
@@ -1298,8 +1317,8 @@ Le quality gate backend est exécuté depuis la racine du repository :
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```

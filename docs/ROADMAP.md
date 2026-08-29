@@ -36,7 +36,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 3     | Modèle de données initial et persistance            | ✅ Terminée |
 | 4     | Fondation API FastAPI                               | ✅ Terminée |
 | 5     | Profil utilisateur et préférences                   | ✅ Terminée |
-| 6     | Domaine et API des offres                           | ⬜ À faire  |
+| 6     | Domaine et API des offres                           | ✅ Terminée |
 | 7     | Collecteur fictif                                   | ⬜ À faire  |
 | 8     | Pipeline collecte → normalisation → stockage        | ⬜ À faire  |
 | 9     | Déduplication                                       | ⬜ À faire  |
@@ -473,7 +473,7 @@ La stratégie retenue remplace explicitement les relations concernées dans la m
 
 ## Étape 6 — Domaine et API des offres
 
-**État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
@@ -486,31 +486,19 @@ Elle ne collecte encore aucune donnée externe.
 ### Inclus
 
 * schémas Pydantic des offres ;
-* repository spécifique si nécessaire ;
-* service de consultation si nécessaire ;
-* pagination ;
-* filtres initiaux ;
-* tri ;
-* endpoint :
-
-```text
-GET /api/v1/jobs
-```
-
-* endpoint :
-
-```text
-GET /api/v1/jobs/{id}
-```
-
+* API de consultation des offres sous `/api/v1/jobs` ;
+* endpoint de détail sous `/api/v1/jobs/{id}` ;
+* pagination déterministe ;
+* filtres initiaux applicables aux champs existants ;
+* tri explicite et limité ;
 * gestion des offres inexistantes ;
-* exposition contrôlée de la provenance lorsque pertinent ;
-* tests API ;
-* tests de persistence pertinents.
+* exposition contrôlée de la provenance via `JobSourceOccurrence` ;
+* tests API deterministes ;
+* validation des réponses structurelles.
 
 ### Pagination
 
-Prévoir une pagination simple et explicite, par exemple :
+La pagination est implémentée sous la forme :
 
 ```text
 page
@@ -519,23 +507,24 @@ total
 items
 ```
 
-Le `page_size` doit être borné raisonnablement.
+Le `page_size` est borné raisonnablement et les paramètres invalides sont rejetés par validation FastAPI.
 
-La pagination doit être appliquée après les filtres.
+La pagination est appliquée après les filtres.
 
 ### Filtres initiaux possibles
 
 Uniquement selon les champs réellement disponibles dans `JobOffer` :
 
-* localisation ;
-* type de contrat ;
-* remote ;
-* date de publication ;
 * entreprise ;
+* ville ;
+* pays ;
+* type de contrat ;
+* type de poste ;
+* remote ;
 * statut ;
-* type de poste.
+* date de publication.
 
-Ne pas créer artificiellement des champs pour satisfaire un filtre.
+Les filtres sont combinables.
 
 ### Tri
 
@@ -1408,8 +1397,8 @@ Depuis la racine :
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```

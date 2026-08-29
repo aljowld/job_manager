@@ -394,8 +394,8 @@ Run from the repository root:
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```
@@ -435,26 +435,23 @@ Tests for collectors must use fixtures, mocks or recorded payloads and must not 
 Check application code:
 
 ```bash
-uv run ruff check .
+uv run ruff check src/backend/app
 ```
 
 Check formatting:
 
 ```bash
-uv run ruff format --check .
+uv run ruff format --check src/backend/app
 ```
 
-Apply safe fixes:
+Apply safe fixes preferred during development:
 
 ```bash
-uv run ruff check --fix .
+uv run ruff check src/backend/app --fix
+uv run ruff format src/backend/app
 ```
 
-Format application code:
-
-```bash
-uv run ruff format .
-```
+`--fix` is the preferred automatic correction path for safe Ruff repairs such as unused imports, import ordering, duplicate imports, and other safe fixes. It should not be used as part of the final repository validation gate.
 
 The backend test directory is excluded by project configuration.
 

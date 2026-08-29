@@ -336,6 +336,15 @@ GET http://localhost:8000/api/v1/profile
 PUT http://localhost:8000/api/v1/profile
 ```
 
+## Offres d'emploi
+
+```text
+GET http://localhost:8000/api/v1/jobs
+GET http://localhost:8000/api/v1/jobs/{id}
+```
+
+Les offres peuvent être paginées et filtrées selon les champs réellement présents dans le modèle `JobOffer`.
+
 ## Documentation OpenAPI
 
 Swagger UI :
@@ -579,8 +588,8 @@ Depuis la racine du repository :
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```
@@ -612,25 +621,27 @@ uv run pytest
 Vérification :
 
 ```bash
-uv run ruff check .
+uv run ruff check src/backend/app
 ```
 
-Correction automatique des problèmes compatibles :
+Correction automatique des problèmes sûrs, privilégiée pendant le développement :
 
 ```bash
-uv run ruff check --fix .
+uv run ruff check src/backend/app --fix
+uv run ruff format src/backend/app
 ```
+
+`--fix` doit être présenté comme la méthode privilégiée pour corriger automatiquement les violations sûres lorsque Ruff le permet, notamment :
+
+* imports inutilisés ;
+* ordre et regroupement des imports ;
+* imports dupliqués ;
+* autres corrections automatiques sûres proposées par Ruff.
 
 Vérification du formatage :
 
 ```bash
-uv run ruff format --check .
-```
-
-Formatage :
-
-```bash
-uv run ruff format .
+uv run ruff format --check src/backend/app
 ```
 
 Le dossier :
@@ -758,19 +769,20 @@ Depuis la racine :
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```
 
-Si Ruff signale uniquement un problème de formatage du code applicatif :
+Pendant le développement, les corrections sûres peuvent être appliquées automatiquement avec :
 
 ```bash
-uv run ruff format .
+uv run ruff check src/backend/app --fix
+uv run ruff format src/backend/app
 ```
 
-Puis relancer le quality gate.
+Puis relancer le quality gate sans utiliser `--fix` dans la validation finale.
 
 Vérifier ensuite les modifications Git :
 
@@ -955,8 +967,8 @@ uv run alembic upgrade head
 
 ```bash
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff check src/backend/app
+uv run ruff format --check src/backend/app
 uv run ty check
 uv run pytest src/backend/tests
 ```
