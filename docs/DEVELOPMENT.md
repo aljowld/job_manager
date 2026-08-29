@@ -68,6 +68,13 @@ uv sync --dev
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+The API will be available at `http://localhost:8000`:
+- REST API: `http://localhost:8000/api/v1`
+- OpenAPI documentation: `http://localhost:8000/docs`
+- ReDoc documentation: `http://localhost:8000/redoc`
+- Health check: `http://localhost:8000/health`
+- Readiness check: `http://localhost:8000/health/ready`
+
 ## Frontend local
 
 ```bash

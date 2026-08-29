@@ -7,7 +7,10 @@ class Settings(BaseSettings):
 
     app_env: str = Field(default="development", alias="APP_ENV")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
-    database_url: str = Field(default="postgresql+psycopg://job_manager:job_manager@localhost:5432/job_manager", alias="DATABASE_URL")
+    database_url: str = Field(
+        default="postgresql+psycopg://job_manager:job_manager@localhost:5432/job_manager",
+        alias="DATABASE_URL",
+    )
     api_prefix: str = Field(default="/api/v1", alias="API_PREFIX")
 
 

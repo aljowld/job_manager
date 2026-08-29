@@ -23,11 +23,19 @@ class JobSource(Base):
     rate_limit: Mapped[str | None] = mapped_column(String(255), nullable=True)
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+    )
 
-    raw_snapshots: Mapped[list[RawJobSnapshot]] = relationship(back_populates="source", cascade="all, delete-orphan")
-    occurrences: Mapped[list[JobSourceOccurrence]] = relationship(back_populates="source", cascade="all, delete-orphan")
+    raw_snapshots: Mapped[list[RawJobSnapshot]] = relationship(
+        back_populates="source", cascade="all, delete-orphan"
+    )
+    occurrences: Mapped[list[JobSourceOccurrence]] = relationship(
+        back_populates="source", cascade="all, delete-orphan"
+    )
 
 
 class RawJobSnapshot(Base):
@@ -40,12 +48,16 @@ class RawJobSnapshot(Base):
     payload: Mapped[dict] = mapped_column(JSON, nullable=False)
     raw_html: Mapped[str | None] = mapped_column(Text, nullable=True)
     content_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
+    collected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
 
     source: Mapped[JobSource] = relationship(back_populates="raw_snapshots")
 
     __table_args__ = (
-        UniqueConstraint("source_id", "external_job_id", name="uq_raw_job_snapshot_source_external_id"),
+        UniqueConstraint(
+            "source_id", "external_job_id", name="uq_raw_job_snapshot_source_external_id"
+        ),
     )
 
 
@@ -74,15 +86,27 @@ class JobOffer(Base):
     education_level: Mapped[str | None] = mapped_column(String(120), nullable=True)
     industry: Mapped[str | None] = mapped_column(String(120), nullable=True)
     job_category: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    publication_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    publication_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     expiration_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
-    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now)
+    first_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+    )
     status: Mapped[str] = mapped_column(String(80), nullable=False, default="active")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+    )
 
-    occurrences: Mapped[list[JobSourceOccurrence]] = relationship(back_populates="job_offer", cascade="all, delete-orphan")
+    occurrences: Mapped[list[JobSourceOccurrence]] = relationship(
+        back_populates="job_offer", cascade="all, delete-orphan"
+    )
 
 
 class JobSourceOccurrence(Base):
@@ -96,11 +120,18 @@ class JobSourceOccurrence(Base):
     collected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     status: Mapped[str] = mapped_column(String(80), nullable=False, default="active")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
 
     job_offer: Mapped[JobOffer] = relationship(back_populates="occurrences")
     source: Mapped[JobSource] = relationship(back_populates="occurrences")
 
     __table_args__ = (
-        UniqueConstraint("job_offer_id", "source_id", "external_job_id", name="uq_job_occurrence_offer_source_external"),
+        UniqueConstraint(
+            "job_offer_id",
+            "source_id",
+            "external_job_id",
+            name="uq_job_occurrence_offer_source_external",
+        ),
     )
