@@ -37,7 +37,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 4     | Fondation API FastAPI                               | ✅ Terminée |
 | 5     | Profil utilisateur et préférences                   | ✅ Terminée |
 | 6     | Domaine et API des offres                           | ✅ Terminée |
-| 7     | Collecteur fictif                                   | ⬜ À faire  |
+| 7     | Collecteur fictif                                   | ✅ Terminée |
 | 8     | Pipeline collecte → normalisation → stockage        | ⬜ À faire  |
 | 9     | Déduplication                                       | ⬜ À faire  |
 | 10    | Premier connecteur réel                             | ⬜ À faire  |
@@ -578,7 +578,7 @@ Les `RawJobSnapshot` ne doivent pas être exposés directement par défaut dans 
 
 ## Étape 7 — Collecteur fictif
 
-**État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
@@ -592,8 +592,8 @@ Créer une source entièrement locale permettant de tester le système sans dép
 * cas volontairement incomplets ;
 * offres avec différents contrats et localisations ;
 * offres similaires pour préparer la déduplication ;
-* snapshots bruts ;
-* tests.
+* données brutes en mémoire ;
+* tests déterministes.
 
 ### Jeu de données fictif
 
@@ -615,16 +615,17 @@ Les fixtures doivent notamment permettre de représenter :
 * scraping réel ;
 * Playwright ;
 * déduplication effective ;
-* matching.
+* matching ;
+* pipeline collecte → normalisation → stockage.
 
 ### Critères de validation
 
-* [ ] abstraction de source définie ;
-* [ ] collecteur fictif fonctionnel ;
-* [ ] fixtures déterministes ;
-* [ ] données brutes produites ;
-* [ ] aucune dépendance réseau dans les tests ;
-* [ ] quality gate applicable validé.
+* [x] abstraction de source définie ;
+* [x] collecteur fictif fonctionnel ;
+* [x] fixtures déterministes ;
+* [x] données brutes produites ;
+* [x] aucune dépendance réseau dans les tests ;
+* [x] quality gate applicable validé.
 
 ---
 
