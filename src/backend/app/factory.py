@@ -59,7 +59,7 @@ def _setup_error_handlers(app: FastAPI) -> None:
     async def application_error_handler(request: Request, exc: ApplicationError) -> JSONResponse:
         """Handle application errors with consistent format."""
         return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=exc.status_code,
             content={
                 "error": {
                     "code": exc.code,

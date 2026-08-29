@@ -31,7 +31,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 2     | Infrastructure locale Docker/PostgreSQL             | ✅ Terminée |
 | 3     | Modèle de données initial et persistance            | ✅ Terminée |
 | 4     | Fondation API FastAPI                               | ✅ Terminée |
-| 5     | Profil utilisateur et préférences                   | ⬜ À faire  |
+| 5     | Profil utilisateur et préférences                   | ✅ Terminée |
 | 6     | Domaine et API des offres                           | ⬜ À faire  |
 | 7     | Collecteur fictif                                   | ⬜ À faire  |
 | 8     | Pipeline collecte → normalisation → stockage        | ⬜ À faire  |

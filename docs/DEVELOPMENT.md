@@ -70,10 +70,13 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 The API will be available at `http://localhost:8000`:
 - REST API: `http://localhost:8000/api/v1`
+- Profile endpoint: `http://localhost:8000/api/v1/profile`
 - OpenAPI documentation: `http://localhost:8000/docs`
 - ReDoc documentation: `http://localhost:8000/redoc`
 - Health check: `http://localhost:8000/health`
 - Readiness check: `http://localhost:8000/health/ready`
+
+The profile API is mono-user: a single profile record is persisted and replaced idempotently through `PUT /api/v1/profile`. If no profile exists yet, `GET /api/v1/profile` returns a 404 `PROFILE_NOT_FOUND` response.
 
 ## Frontend local
 
