@@ -41,7 +41,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 8     | Pipeline collecte → normalisation → stockage        | ✅ Terminée |
 | 9     | Déduplication                                       | ✅ Terminée |
 | 10    | Premier connecteur réel                             | ✅ Terminée |
-| 11    | Matching déterministe V1                            | ⬜ À faire  |
+| 11    | Matching déterministe V1                            | ✅ Terminée |
 | 12    | Frontend — liste et détail des offres               | ⬜ À faire  |
 | 13    | Frontend — profil et préférences                    | ⬜ À faire  |
 | 14    | Favoris, rejets et archivage                        | ⬜ À faire  |
@@ -838,11 +838,34 @@ Le format exact des métadonnées de pagination de l'API Arbeitnow ("links"/"met
 
 ## Étape 11 — Matching déterministe V1
 
-**État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
 Classer les offres en fonction du profil utilisateur avec un moteur déterministe, configurable et explicable.
+
+### Réalisé
+
+* module `src/backend/app/matching/` (`jobs.py` + `__init__.py`), indépendant de
+  FastAPI et de SQLAlchemy (pas de session DB, pas de requête SQL) ;
+* types explicites `MatchState` (MATCH/MISMATCH/UNKNOWN), `CriterionMatchResult`,
+  `JobMatchResult`, `PreferenceItem`, ainsi que des vues de matching découplées
+  de la persistence (`MatchProfile`, `MatchJob`), sur le même principe que
+  `RawJob` pour la collecte ;
+* fonction d'entrée `match_job(profile, job) -> JobMatchResult` ;
+* critères implémentés : `contract_type`, `job_type`, `industry`, `company`
+  (via `PreferredContractType`/`PreferredJobType`/`PreferredIndustry`/
+  `PreferredCompany`, avec `REQUIRED`/`EXCLUDED` en contrainte forte et
+  `AVOID`/`BONUS`/`IMPORTANT`/`VERY_IMPORTANT` pondérés), `location`
+  (`UserProfile.location` vs `city`/`region`/`country`/`location_text`) et
+  `remote` (`UserProfile.remote_preference` vs `JobOffer.remote_type`) ;
+* critères reportés faute de donnée fiable : `PreferredJobRole` (aucun champ
+  `JobOffer` comparable), salaire (`UserProfile` n'expose pas de
+  devise/période, donc pas d'unité comparable en toute sécurité), technologies
+  / compétences (non persistées sous forme structurée sur `JobOffer`) ;
+* version figée `matching_version = "v1"` ;
+* 29 tests unitaires dans `src/backend/tests/test_matching_jobs.py`, sans
+  dépendance à PostgreSQL/Docker/réseau.
 
 ### Composantes possibles
 
@@ -895,6 +918,9 @@ Exemple :
 deterministic-v1
 ```
 
+Choix retenu pour l'implémentation réelle : `matching_version = "v1"`
+(constante `MATCHING_VERSION` dans `app/matching/jobs.py`).
+
 ### Explicabilité
 
 Retourner notamment :
@@ -913,16 +939,29 @@ Retourner notamment :
 * apprentissage automatique ;
 * personnalisation comportementale.
 
+### Limitations connues
+
+* `PreferredJobRole` n'est pas utilisé dans le score V1 : aucun champ `JobOffer`
+  ne permet actuellement de le comparer de façon fiable au titre de l'offre.
+* le salaire n'est pas comparé : `UserProfile.desired_salary_min/max` sont des
+  entiers sans devise ni période, alors que `JobOffer` expose
+  `salary_currency`/`salary_period` ; comparer les deux supposerait des unités
+  identiques non garanties.
+* les technologies/compétences ne sont pas comparées : `JobOffer` ne persiste
+  pas encore ces informations sous une forme structurée.
+* aucune API HTTP n'a été ajoutée pour cette étape (hors périmètre demandé) ;
+  le moteur est testé directement via `match_job`.
+
 ### Critères de validation
 
-* [ ] score reproductible ;
-* [ ] poids configurables ;
-* [ ] critères bloquants ;
-* [ ] gestion `UNKNOWN` ;
-* [ ] explication dérivée du calcul réel ;
-* [ ] version du moteur conservée ;
-* [ ] tests unitaires approfondis ;
-* [ ] quality gate applicable validé.
+* [x] score reproductible ;
+* [x] poids configurables ;
+* [x] critères bloquants ;
+* [x] gestion `UNKNOWN` ;
+* [x] explication dérivée du calcul réel ;
+* [x] version du moteur conservée ;
+* [x] tests unitaires approfondis ;
+* [x] quality gate applicable validé.
 
 ---
 
@@ -1479,8 +1518,8 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 Étape 8   ✅ Pipeline
 Étape 9   ✅ Déduplication
 Étape 10  ✅ Première source réelle
-Étape 11  ⬜ Matching V1                ← PROCHAINE ÉTAPE
-Étape 12  ⬜ Frontend offres
+Étape 11  ✅ Matching V1
+Étape 12  ⬜ Frontend offres                ← PROCHAINE ÉTAPE
 Étape 13  ⬜ Frontend profil
 Étape 14  ⬜ Interactions
 Étape 15  ⬜ Candidatures
@@ -1497,4 +1536,4 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 Étape 23  ⬜ Stabilisation
 ```
 
-**Prochaine étape autorisée : Étape 6 — Domaine et API des offres.**
+**Prochaine étape autorisée : Étape 12 — Frontend : liste et détail des offres.**

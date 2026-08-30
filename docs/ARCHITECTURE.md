@@ -405,6 +405,20 @@ Responsabilités :
 
 Le matching ne doit pas être confondu avec la déduplication.
 
+### Implémentation (Étape 11 — V1)
+
+* module `src/backend/app/matching/` (`jobs.py`), indépendant de FastAPI et de
+  SQLAlchemy ;
+* point d'entrée `match_job(profile: MatchProfile, job: MatchJob) -> JobMatchResult` ;
+* version figée : `matching_version = "v1"` ;
+* critères couverts en V1 : `contract_type`, `job_type`, `industry`, `company`
+  (hard constraints `REQUIRED`/`EXCLUDED` + poids `AVOID`/`BONUS`/`IMPORTANT`/
+  `VERY_IMPORTANT`), `location`, `remote` ;
+* reportés faute de donnée fiable : rôle (`PreferredJobRole`), salaire,
+  technologies/compétences (voir `docs/ROADMAP.md`, Étape 11, « Limitations
+  connues ») ;
+* aucune persistence de score, aucune migration, aucun endpoint HTTP.
+
 ---
 
 ## 6.7 Applications
