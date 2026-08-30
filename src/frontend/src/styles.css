@@ -252,3 +252,122 @@ h1 {
   }
 }
 
+/* Profile Page */
+.profile-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.profile-form fieldset {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.profile-form legend {
+  font-weight: bold;
+  padding: 0 8px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form-actions {
+  margin: 24px 0;
+}
+
+.form-actions button {
+  padding: 8px 16px;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.form-actions button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.preference-collection {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.preference-collection legend {
+  font-weight: bold;
+  padding: 0 8px;
+}
+
+.preference-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px 0;
+}
+
+.preference-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.preference-item-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.preference-item-detail {
+  color: #666;
+}
+
+.preference-add-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.preference-add-form input,
+.preference-add-form select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.preference-add-form button {
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.status-message--error {
+  color: #dc3545;
+  margin-bottom: 16px;
+}
+
+.status-message--success {
+  color: #28a745;
+  margin-bottom: 16px;
+}

@@ -44,6 +44,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 11    | Matching déterministe V1                            | ✅ Terminée |
 | 12    | Frontend — liste et détail des offres               | ✅ Terminée |
 | 13    | Frontend — profil et préférences                    | ⬜ À faire  |
+| 13    | Frontend — profil et préférences                    | ✅ Terminée |
 | 14    | Favoris, rejets et archivage                        | ⬜ À faire  |
 | 15    | Suivi des candidatures                              | ⬜ À faire  |
 | 16    | Import et analyse du CV                             | ⬜ Post-MVP |
@@ -1082,6 +1083,7 @@ plage jugée disproportionnée pour le bénéfice actuel).
 ## Étape 13 — Frontend : profil et préférences
 
 **État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
@@ -1115,6 +1117,12 @@ Permettre de consulter et modifier le profil depuis l'interface.
 * [ ] validation ;
 * [ ] gestion des erreurs API ;
 * [ ] tests frontend principaux.
+* [x] lecture ;
+* [x] modification ;
+* [x] sauvegarde ;
+* [x] validation ;
+* [x] gestion des erreurs API ;
+* [x] tests frontend principaux.
 
 ---
 
@@ -1572,6 +1580,8 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 Étape 12  ✅ Frontend offres
 Étape 13  ⬜ Frontend profil                ← PROCHAINE ÉTAPE
 Étape 14  ⬜ Interactions
+Étape 13  ✅ Frontend profil
+Étape 14  ⬜ Interactions                     ← PROCHAINE ÉTAPE
 Étape 15  ⬜ Candidatures
 ────────────────────────────────────────
                  MVP
@@ -1587,3 +1597,4 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 ```
 
 **Prochaine étape autorisée : Étape 13 — Frontend : profil et préférences.**
+**Prochaine étape autorisée : Étape 14 — Favoris, rejets et archivage.**
