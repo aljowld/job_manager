@@ -42,7 +42,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 9     | Déduplication                                       | ✅ Terminée |
 | 10    | Premier connecteur réel                             | ✅ Terminée |
 | 11    | Matching déterministe V1                            | ✅ Terminée |
-| 12    | Frontend — liste et détail des offres               | ⬜ À faire  |
+| 12    | Frontend — liste et détail des offres               | ✅ Terminée |
 | 13    | Frontend — profil et préférences                    | ⬜ À faire  |
 | 14    | Favoris, rejets et archivage                        | ⬜ À faire  |
 | 15    | Suivi des candidatures                              | ⬜ À faire  |
@@ -969,11 +969,48 @@ Retourner notamment :
 
 ## Étape 12 — Frontend : liste et détail des offres
 
-**État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
 Créer la première interface réellement utilisable de consultation des offres.
+
+### Ajustement de périmètre documenté
+
+Le score/explication de matching mentionné plus bas (« Détail ») a été
+volontairement différé : le moteur de matching de l'Étape 11 n'expose encore
+aucun endpoint HTTP, et cette étape porte uniquement sur la consultation des
+offres déjà persistées. L'intégration du score/MATCH-MISMATCH/explication
+dans le frontend est reportée à une étape dédiée et explicite (au plus tôt
+l'Étape 20 — Matching hybride et personnalisation, ou une étape intermédiaire
+à planifier si un besoin apparaît avant).
+
+### Réalisé
+
+* frontend `src/frontend/src/` : `App.tsx` (routes), pages `JobsListPage` /
+  `JobDetailPage`, composants `JobCard` / `JobFilters` / `Pagination` /
+  `StatusMessage`, client API (`api/client.ts` + `api/jobs.ts` sur `fetch`
+  natif) et types TypeScript (`types/jobs.ts`) calqués sur les schémas
+  Pydantic existants (`JobOfferSummary`, `JobOfferDetail`,
+  `JobOfferListResponse`, `JobSourceOccurrenceSummary`) ;
+* dépendance ajoutée : `react-router` (Mode Déclaratif — `BrowserRouter`,
+  `Routes`, `Route`, `Link`, `useParams`, `useSearchParams`) pour des routes
+  `/jobs` et `/jobs/:id` adressables, rechargeables et partageables ;
+* pagination, tri (`sort_by`/`sort_order`) et filtres `company_name`/`city`
+  (partiels, insensibles à la casse) et `remote_type` (valeurs fermées
+  `remote`/`hybrid`/`on_site`) synchronisés dans l'URL via
+  `useSearchParams` ; filtres `country`/`contract_type`/`job_type`/`status`/
+  dates différés (voir limitation ci-dessous) ;
+* détail d'une offre avec provenance (`JobSourceOccurrenceSummary` :
+  source, référence externe, date de collecte, indicateur `is_primary`,
+  lien source en `target="_blank" rel="noopener noreferrer"`) ; aucun
+  `RawJobSnapshot` exposé ;
+* états loading / vide / erreur / 404 explicites pour la liste et le détail ;
+* tests frontend : Vitest + React Testing Library ajoutés (nouvelle
+  dépendance de développement), 16 tests sur 4 fichiers couvrant liste
+  (loading/vide/erreur/pagination/filtre/navigation) et détail
+  (loading/détail+provenance/404/erreur), sans réseau réel (fonctions API
+  mockées).
 
 ### Liste
 
@@ -985,8 +1022,8 @@ Afficher notamment :
 * contrat ;
 * remote ;
 * date ;
-* score lorsqu'il existe ;
-* compétences principales.
+* score lorsqu'il existe (différé, voir « Ajustement de périmètre » ci-dessus) ;
+* compétences principales (différé : non persistées sous forme structurée sur `JobOffer`).
 
 ### Fonctionnalités
 
@@ -1005,27 +1042,40 @@ Afficher :
 * description ;
 * données structurées ;
 * provenance ;
-* score ;
-* explication ;
-* points forts ;
-* points faibles ;
-* informations inconnues ;
+* score (différé, voir « Ajustement de périmètre » ci-dessus) ;
+* explication (différé, idem) ;
+* points forts (différé, idem) ;
+* points faibles (différé, idem) ;
+* informations inconnues (différé, idem) ;
 * URL source.
 
 ### Explicitement non inclus
 
 * profil frontend ;
 * candidatures ;
-* recherche sémantique.
+* recherche sémantique ;
+* score / badge MATCH-MISMATCH / explication de matching (voir ajustement de périmètre) ;
+* nouvelle bibliothèque UI, gestion d'état globale (Redux/Zustand), ESLint.
+
+### Limitation connue
+
+Les filtres `country`, `contract_type`, `job_type` et `status` ne sont pas
+exposés dans l'interface V1 : ce sont des filtres à correspondance exacte
+côté API, sans liste de valeurs canonique disponible aujourd'hui (à
+l'exception de `status`, qui ne prend actuellement que la valeur `active`
+dans tout le système). Les exposer sous forme de champ texte libre aurait un
+risque élevé de ne renvoyer aucun résultat par erreur de casse/valeur. Les
+plages de dates de publication sont également différées (UI de sélection de
+plage jugée disproportionnée pour le bénéfice actuel).
 
 ### Critères de validation
 
-* [ ] liste fonctionnelle ;
-* [ ] pagination ;
-* [ ] filtres ;
-* [ ] détail fonctionnel ;
-* [ ] erreurs API correctement affichées ;
-* [ ] tests frontend principaux.
+* [x] liste fonctionnelle ;
+* [x] pagination ;
+* [x] filtres ;
+* [x] détail fonctionnel ;
+* [x] erreurs API correctement affichées ;
+* [x] tests frontend principaux.
 
 ---
 
@@ -1519,8 +1569,8 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 Étape 9   ✅ Déduplication
 Étape 10  ✅ Première source réelle
 Étape 11  ✅ Matching V1
-Étape 12  ⬜ Frontend offres                ← PROCHAINE ÉTAPE
-Étape 13  ⬜ Frontend profil
+Étape 12  ✅ Frontend offres
+Étape 13  ⬜ Frontend profil                ← PROCHAINE ÉTAPE
 Étape 14  ⬜ Interactions
 Étape 15  ⬜ Candidatures
 ────────────────────────────────────────
@@ -1536,4 +1586,4 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 Étape 23  ⬜ Stabilisation
 ```
 
-**Prochaine étape autorisée : Étape 12 — Frontend : liste et détail des offres.**
+**Prochaine étape autorisée : Étape 13 — Frontend : profil et préférences.**

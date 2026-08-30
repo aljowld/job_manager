@@ -1123,6 +1123,19 @@ Le frontend ne doit pas contenir :
 
 Le backend reste la source de vérité.
 
+### Implémentation (Étape 12 — liste et détail des offres)
+
+* routing : `react-router` (Mode Déclaratif — `BrowserRouter`/`Routes`/
+  `Route`/`Link`/`useParams`/`useSearchParams`), premières routes `/jobs` et
+  `/jobs/:id` ;
+* données serveur : `fetch` natif via un petit client dédié
+  (`src/frontend/src/api/`), sans bibliothèque de data-fetching ni de gestion
+  d'état globale (pas de Redux/Zustand/React Query à ce stade) ; l'état des
+  filtres/pagination/tri est synchronisé dans l'URL (`useSearchParams`) plutôt
+  que dans un état local uniquement ;
+* tests : Vitest + React Testing Library (première introduction d'un
+  framework de tests frontend dans le projet).
+
 ---
 
 # 19. Stratégie de tests

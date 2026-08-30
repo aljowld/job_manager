@@ -1,18 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router';
+import { App } from './App';
 import './styles.css';
-
-function App() {
-  return (
-    <main className="app-shell">
-      <h1>Job Manager</h1>
-      <p>Bootstrap frontend for the personal job and internship assistant.</p>
-    </main>
-  );
-}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>,
 );

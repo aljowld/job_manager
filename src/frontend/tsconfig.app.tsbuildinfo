@@ -1,1 +1,1 @@
-{"root":["./src/main.tsx"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/setuptests.ts","./src/vite-env.d.ts","./src/api/client.ts","./src/api/jobs.ts","./src/components/jobcard.tsx","./src/components/jobfilters.test.tsx","./src/components/jobfilters.tsx","./src/components/pagination.test.tsx","./src/components/pagination.tsx","./src/components/statusmessage.tsx","./src/pages/jobdetailpage.test.tsx","./src/pages/jobdetailpage.tsx","./src/pages/jobslistpage.test.tsx","./src/pages/jobslistpage.tsx","./src/types/jobs.ts"],"version":"5.9.3"}
