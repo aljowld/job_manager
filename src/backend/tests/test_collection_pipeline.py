@@ -53,7 +53,7 @@ def test_pipeline_persists_fake_jobs_and_occurrences(db_session: Session) -> Non
 
 
 def test_pipeline_preserves_similar_fake_jobs_as_distinct_offers(db_session: Session) -> None:
-    """Similar offers are kept distinct; deduplication is intentionally deferred to step 9."""
+    """Fake jobs with only a different city are not conflated by deduplication."""
     pipeline = CollectionPipeline(db_session)
     source = FakeJobSource()
 

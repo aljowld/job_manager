@@ -18,10 +18,14 @@ Completed roadmap steps:
 * ✅ Step 3 — Initial persistence layer
 * ✅ Step 4 — FastAPI foundation
 * ✅ Step 5 — User profile and preferences
+* ✅ Step 6 — Job offer domain and API
+* ✅ Step 7 — Fake job collector
+* ✅ Step 8 — Collection → normalization → storage pipeline
+* ✅ Step 9 — Deduplication
 
 Next authorized step:
 
-* ⬜ Step 6 — Job offer domain and API
+* ⬜ Step 10 — First real connector
 
 The detailed roadmap is available in:
 

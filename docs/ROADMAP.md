@@ -561,16 +561,16 @@ Les `RawJobSnapshot` ne doivent pas être exposés directement par défaut dans 
 
 ### Critères de validation
 
-* [ ] schémas Pydantic définis ;
-* [ ] liste paginée fonctionnelle ;
-* [ ] détail d'une offre fonctionnel ;
-* [ ] filtres essentiels fonctionnels ;
-* [ ] tri contrôlé ;
-* [ ] provenance exposée lorsque pertinente ;
-* [ ] erreurs API cohérentes ;
-* [ ] tests présents ;
-* [ ] aucune régression introduite ;
-* [ ] quality gate applicable validé.
+* [x] schémas Pydantic définis ;
+* [x] liste paginée fonctionnelle ;
+* [x] détail d'une offre fonctionnel ;
+* [x] filtres essentiels fonctionnels ;
+* [x] tri contrôlé ;
+* [x] provenance exposée lorsque pertinente ;
+* [x] erreurs API cohérentes ;
+* [x] tests présents ;
+* [x] aucune régression introduite ;
+* [x] quality gate applicable validé.
 
 ---
 
@@ -691,12 +691,12 @@ Prévoir notamment :
 
 ### Critères de validation
 
-* [ ] pipeline complet fonctionnel avec le collecteur fictif ;
-* [ ] snapshots conservés ;
-* [ ] offres normalisées persistées ;
-* [ ] erreur sur une offre n'arrêtant pas nécessairement tout le batch ;
-* [ ] tests d'intégration présents ;
-* [ ] quality gate applicable validé.
+* [x] pipeline complet fonctionnel avec le collecteur fictif ;
+* [x] snapshots conservés ;
+* [x] offres normalisées persistées ;
+* [x] erreur sur une offre n'arrêtant pas nécessairement tout le batch ;
+* [x] tests d'intégration présents ;
+* [x] quality gate applicable validé.
 
 ---
 
@@ -751,11 +751,17 @@ Elle doit être reliée à l'offre canonique.
 
 ### Critères de validation
 
-* [ ] doublons exacts détectés ;
-* [ ] provenance conservée ;
-* [ ] cas ambigus traités de façon conservatrice ;
-* [ ] tests des cas limites ;
-* [ ] quality gate applicable validé.
+* [x] doublons exacts détectés ;
+* [x] provenance conservée ;
+* [x] cas ambigus traités de façon conservatrice ;
+* [x] tests des cas limites ;
+* [x] quality gate applicable validé.
+
+### Limitation connue
+
+La décision `POSSIBLE_DUPLICATE` (correspondance par fingerprint déterministe) est actuellement traitée par le pipeline exactement comme `NOT_DUPLICATE` : une nouvelle offre canonique distincte est créée, sans lien ni file de révision vers l'offre similaire existante.
+
+Ce comportement respecte le principe conservateur (aucune fusion agressive), mais l'information `POSSIBLE_DUPLICATE` n'est pas encore exploitée. Une évolution future pourra introduire une file de révision si les faux négatifs deviennent un problème réel.
 
 ---
 

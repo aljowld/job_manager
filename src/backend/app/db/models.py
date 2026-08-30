@@ -62,12 +62,6 @@ class RawJobSnapshot(Base):
 
     source: Mapped[JobSource] = relationship(back_populates="raw_snapshots")
 
-    __table_args__ = (
-        UniqueConstraint(
-            "source_id", "external_job_id", name="uq_raw_job_snapshot_source_external_id"
-        ),
-    )
-
 
 class JobOffer(Base):
     __tablename__ = "job_offers"
