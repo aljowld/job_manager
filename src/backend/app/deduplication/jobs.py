@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from urllib.parse import urlsplit, urlunsplit
 
 from sqlalchemy import select
@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.db.models import JobOffer, JobSourceOccurrence, RawJobSnapshot
 
 
-class DuplicateDecision(str, Enum):
+class DuplicateDecision(StrEnum):
     NOT_DUPLICATE = "NOT_DUPLICATE"
     POSSIBLE_DUPLICATE = "POSSIBLE_DUPLICATE"
     CONFIRMED_DUPLICATE = "CONFIRMED_DUPLICATE"

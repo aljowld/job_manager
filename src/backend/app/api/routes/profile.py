@@ -26,10 +26,10 @@ from app.schemas.profile import ProfileInputSchema, ProfileOutputSchema
 router = APIRouter(tags=["profile"])
 
 
-def _deduplicate_by_key(items: Iterable[object], key_name: str) -> list[object]:
+def _deduplicate_by_key[T](items: Iterable[T], key_name: str) -> list[T]:
     """Keep only the first instance of each value while preserving input order."""
     seen: set[str] = set()
-    result: list[object] = []
+    result: list[T] = []
     for item in items:
         key = getattr(item, key_name, None)
         if key is None:

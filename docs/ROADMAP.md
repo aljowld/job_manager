@@ -40,7 +40,7 @@ Les fonctionnalités post-MVP ne doivent pas complexifier prématurément l'arch
 | 7     | Collecteur fictif                                   | ✅ Terminée |
 | 8     | Pipeline collecte → normalisation → stockage        | ✅ Terminée |
 | 9     | Déduplication                                       | ✅ Terminée |
-| 10    | Premier connecteur réel                             | ⬜ À faire  |
+| 10    | Premier connecteur réel                             | ✅ Terminée |
 | 11    | Matching déterministe V1                            | ⬜ À faire  |
 | 12    | Frontend — liste et détail des offres               | ⬜ À faire  |
 | 13    | Frontend — profil et préférences                    | ⬜ À faire  |
@@ -767,30 +767,28 @@ Ce comportement respecte le principe conservateur (aucune fusion agressive), mai
 
 ## Étape 10 — Premier connecteur réel
 
-**État : ⬜ À FAIRE**
+**État : ✅ TERMINÉE**
 
 ### Objectif
 
 Brancher une seule source externe réelle sur le pipeline déjà validé.
 
-### Avant toute implémentation
-
-Créer une fiche source :
+### Fiche source
 
 ```text
-Source:
-URL:
-Méthode utilisée:
-API officielle:
-RSS / feed:
-Scraping nécessaire:
-robots.txt:
-Restrictions connues:
-Authentification:
-Fréquence recommandée:
-Données récupérées:
-Date de dernière vérification:
-Remarques:
+Source: Arbeitnow
+URL: https://www.arbeitnow.com
+Méthode utilisée: API officielle (Job Board API)
+API officielle: oui — https://www.arbeitnow.com/api/job-board-api
+RSS / feed: non nécessaire (API JSON publique disponible)
+Scraping nécessaire: non
+robots.txt: non applicable (endpoint API public documenté, pas de scraping HTML)
+Restrictions connues: aucune authentification requise ; endpoint public en lecture seule ; pagination par paramètre "page"
+Authentification: aucune (API publique sans clé)
+Fréquence recommandée: pas de scheduler à cette étape (planifié Étape 21, post-MVP) ; collecte à la demande via CollectionPipeline
+Données récupérées: slug, title, company_name, description (HTML), remote, url, tags, job_types, location, created_at
+Date de dernière vérification: 2026 (session d'implémentation de l'Étape 10)
+Remarques: le format exact des métadonnées de pagination ("links"/"meta") n'a pas pu être confirmé de façon fiable ; le connecteur reste donc défensif et s'arrête sur une page vide ou une limite max_pages, sans dépendre de ces métadonnées non confirmées.
 ```
 
 ### Ordre de préférence
@@ -823,12 +821,16 @@ Ne jamais contourner :
 
 ### Critères de validation
 
-* [ ] méthode de collecte étudiée et documentée ;
-* [ ] fiche source créée ;
-* [ ] connecteur isolé du cœur métier ;
-* [ ] pipeline existant réutilisé ;
-* [ ] tests à base de fixtures ;
-* [ ] quality gate applicable validé.
+* [x] méthode de collecte étudiée et documentée ;
+* [x] fiche source créée ;
+* [x] connecteur isolé du cœur métier ;
+* [x] pipeline existant réutilisé ;
+* [x] tests à base de fixtures ;
+* [x] quality gate applicable validé.
+
+### Limitation connue
+
+Le format exact des métadonnées de pagination de l'API Arbeitnow ("links"/"meta") n'a pas pu être confirmé par une recherche documentaire fiable. Le connecteur n'en dépend pas : il s'arrête dès qu'une page ne renvoie plus de données ou qu'une limite `max_pages` configurable est atteinte. Ce comportement est conservateur et sans impact fonctionnel connu, mais pourra être révisé si la documentation officielle devient disponible.
 
 ---
 
@@ -1472,12 +1474,12 @@ La prochaine étape ne doit jamais être implémentée automatiquement.
 Étape 4   ✅ Fondation FastAPI
 Étape 5   ✅ Profil utilisateur
 ────────────────────────────────────────
-Étape 6   ⬜ Domaine/API offres
-Étape 7   ⬜ Collecteur fictif
+Étape 6   ✅ Domaine/API offres
+Étape 7   ✅ Collecteur fictif
 Étape 8   ✅ Pipeline
 Étape 9   ✅ Déduplication
-Étape 10  ⬜ Première source réelle     ← PROCHAINE ÉTAPE
-Étape 11  ⬜ Matching V1
+Étape 10  ✅ Première source réelle
+Étape 11  ⬜ Matching V1                ← PROCHAINE ÉTAPE
 Étape 12  ⬜ Frontend offres
 Étape 13  ⬜ Frontend profil
 Étape 14  ⬜ Interactions

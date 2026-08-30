@@ -22,10 +22,11 @@ Completed roadmap steps:
 * ✅ Step 7 — Fake job collector
 * ✅ Step 8 — Collection → normalization → storage pipeline
 * ✅ Step 9 — Deduplication
+* ✅ Step 10 — First real connector (Arbeitnow)
 
 Next authorized step:
 
-* ⬜ Step 10 — First real connector
+* ⬜ Step 11 — Deterministic matching V1
 
 The detailed roadmap is available in:
 
@@ -622,9 +623,9 @@ The MVP must not require:
 The next authorized roadmap step is:
 
 ```text
-Step 6 — Job offer domain and API
+Step 11 — Deterministic matching V1
 ```
 
-Its goal is to expose already-persisted `JobOffer` records through a typed, paginated and filterable API.
+Its goal is to compare persisted job offers against the user profile using deterministic rules (not yet implemented).
 
 Collection starts only in Step 7.
