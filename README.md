@@ -23,10 +23,13 @@ Completed roadmap steps:
 * ✅ Step 8 — Collection → normalization → storage pipeline
 * ✅ Step 9 — Deduplication
 * ✅ Step 10 — First real connector (Arbeitnow)
+* ✅ Step 11 — Deterministic matching V1
+* ✅ Step 12 — Frontend — liste et détail des offres
+* ✅ Step 13 — Frontend — profil et préférences
 
 Next authorized step:
 
-* ⬜ Step 11 — Deterministic matching V1
+* ⬜ Step 14 — Favoris, rejets et archivage
 
 The detailed roadmap is available in:
 
@@ -623,9 +626,9 @@ The MVP must not require:
 The next authorized roadmap step is:
 
 ```text
-Step 11 — Deterministic matching V1
+Step 14 — Favoris, rejets et archivage
 ```
 
-Its goal is to compare persisted job offers against the user profile using deterministic rules (not yet implemented).
+Its goal is to introduce interaction with job offers (favorites, rejections, archiving).
 
 Collection starts only in Step 7.
